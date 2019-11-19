@@ -2,6 +2,7 @@ import os
 import glob
 
 import luigi
+import numpy as np
 
 from ..tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
 from . import JobSystemWorkflow
@@ -38,12 +39,6 @@ class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''
 
     # TODO consider removing
-    downsampling = luigi.IntParameter(default=1)
-    '''downsampling factor for the images.
-
-    '''
-
-    # TODO consider removing
     model_folder = luigi.Parameter()
     '''folder containing model to be applied.
 
@@ -72,5 +67,4 @@ class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
             image_paths=image_paths,
             output_folder=self.output_folder,
             model_folder=self.model_folder,
-            model_weights_fname=self.model_weights_fname,
-            downsampling=self.downsampling)
+            model_weights_fname=self.model_weights_fname)
