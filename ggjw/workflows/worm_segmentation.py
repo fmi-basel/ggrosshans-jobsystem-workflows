@@ -1,21 +1,30 @@
+'''Provides workflows for segmentation of worms.
+
+'''
 import os
-import glob
 
 import luigi
-import numpy as np
 
-from ..tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
-from . import JobSystemWorkflow
+from ggjw import MODEL_BASE_FOLDER
+from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
+from ggjw.workflows import JobSystemWorkflow
+
+# basic lookup of model folder. Should be delegated in the future.
 
 
 class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
-    '''
+    '''worm segmentation with a CNN from DIC image stacks.
+
+    NOTE input is expected to be 3-dim, the first axis is then projected
+    and the output is a 2-dim segmentation.
+
     '''
     input_folder = luigi.Parameter()
     '''base folder containing the images to be processed.
 
     '''
-    input_pattern = luigi.Parameter()
+
+    file_pattern = luigi.Parameter()
     '''file name pattern that matches all images that need to be
     processed.
 
@@ -38,33 +47,25 @@ class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
 
     '''
 
-    # TODO consider removing
-    model_folder = luigi.Parameter()
-    '''folder containing model to be applied.
+    model_folder = os.path.join(MODEL_BASE_FOLDER, 'segmentation',
+                                'worms_from_dic', 'v0')
+    '''path of saved model.
 
     '''
-
-    # TODO consider removing
-    model_weights_fname = luigi.Parameter()
-    '''filename of weights. Must exist in model_folder.
+    model_weights_fname = 'model_latest.h5'
+    '''file name of model weights.
 
     '''
 
     task_namespace = 'ggrosshans'
+    resources = {'gpu': 1}
 
     def requires(self):
+        '''launch the actual segmentation task.
         '''
-        '''
-        image_paths = sorted(
-            glob.glob(os.path.join(self.input_folder, self.input_pattern)))
-
-        if not image_paths:
-            raise RuntimeError(
-                'No input images found at {} matching {}'.format(
-                    self.input_folder, self.input_pattern))
-
         yield RunBinarySegmentationModelPredictionTask(
-            image_paths=image_paths,
+            input_folder=self.input_folder,
+            file_pattern=self.file_pattern,
             output_folder=self.output_folder,
             model_folder=self.model_folder,
             model_weights_fname=self.model_weights_fname)
