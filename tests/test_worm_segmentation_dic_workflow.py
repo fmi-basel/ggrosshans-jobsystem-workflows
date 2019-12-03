@@ -1,6 +1,7 @@
 import os
 from glob import glob
 
+import pytest
 import luigi
 import numpy as np
 
@@ -74,6 +75,7 @@ def test_workflow_error_on_no_input(tmpdir):
     found that match the file pattern.
     '''
     input_folder = tmpdir / 'empty'
+    input_folder.mkdir()
 
     result = luigi.build([
         WormSegmentationFromDICWorkflow(output_folder=str(input_folder),

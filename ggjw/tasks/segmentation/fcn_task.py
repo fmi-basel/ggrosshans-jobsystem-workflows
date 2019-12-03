@@ -29,6 +29,19 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
     output_folder = luigi.Parameter()
     verbose = luigi.BoolParameter(default=True)
 
+    patch_size = luigi.IntParameter(
+        default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
+
+    @property
+    def _patch_size(self):
+        '''generates the patch size tuple or returns None
+        if undefined.
+
+        '''
+        if self.patch_size is None:
+            return self.patch_size
+        return tuple(self.patch_size for _ in range(2))
+
     def preprocess_fn(self, image):
         '''
         '''
@@ -53,9 +66,11 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
         def processor_fn(image, target):
             '''
             '''
-            prediction = (predict_complete(
-                model, self.preprocess_fn(image), batch_size=1)['fg'] *
-                          255).astype(np.uint8)
+            prediction = (predict_complete(model,
+                                           self.preprocess_fn(image),
+                                           patch_size=self._patch_size,
+                                           batch_size=1)['fg'] * 255).astype(
+                                               np.uint8)
             return prediction, target
 
         def saver_fn(prediction, target):
