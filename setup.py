@@ -14,7 +14,7 @@ setup(
         'tests',
         'examples',
     ]),
-    include_package_data=False,
+    include_package_data=True,
     install_requires=[
         'luigi',
         'pytest',

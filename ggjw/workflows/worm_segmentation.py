@@ -5,7 +5,7 @@ import os
 
 import luigi
 
-from ggjw import MODEL_BASE_FOLDER
+from ggjw.models import MODEL_BASE_FOLDER
 from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
 from ggjw.workflows import JobSystemWorkflow
 
