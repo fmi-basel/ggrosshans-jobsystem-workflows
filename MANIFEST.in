@@ -1,0 +1,2 @@
+recursive-include ggjw/models *.yaml
+recursive-include ggjw/models *.h5
