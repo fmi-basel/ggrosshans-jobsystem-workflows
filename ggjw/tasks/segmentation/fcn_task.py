@@ -32,7 +32,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
     patch_size = luigi.IntParameter(
         default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     patch_overlap = luigi.IntParameter(
-        default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
+        default=10, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     batch_size = luigi.IntParameter(
         default=1, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
