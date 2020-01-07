@@ -31,10 +31,10 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
 
     patch_size = luigi.IntParameter(
         default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
-    patch_overlap = luigi.IntParameter(default=None, 
-	visibility=luigi.parameter.ParameterVisibility.HIDDEN)
+    patch_overlap = luigi.IntParameter(
+        default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     batch_size = luigi.IntParameter(
-	default=1, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
+        default=1, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
 
     @property
     def _patch_size(self):
@@ -74,8 +74,8 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
                                            self.preprocess_fn(image),
                                            patch_size=self._patch_size,
                                            border=self.patch_overlap,
-                                           batch_size=self.batch_size)['fg'] * 255).astype(
-                                               np.uint8)
+                                           batch_size=self.batch_size)['fg'] *
+                          255).astype(np.uint8)
             return prediction, target
 
         def saver_fn(prediction, target):
