@@ -35,7 +35,9 @@ config:
     config:
       data_format: channels_last
       dtype: float32
-      factor: 16
+      factor: !!python/tuple
+      - 16
+      - 16
       name: dpad
       ndim: 4
       trainable: true
@@ -3138,7 +3140,6 @@ config:
     config:
       data_format: channels_last
       dtype: float32
-      dynamic: true
       name: dtrim
       ndim: 4
       trainable: true
@@ -3175,7 +3176,7 @@ config:
       - 1
       - 1
       name: fg
-      padding: same
+      padding: valid
       strides: *id009
       trainable: true
       use_bias: true
