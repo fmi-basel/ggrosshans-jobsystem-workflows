@@ -15,9 +15,11 @@ from dlutils.models import load_model
 from faim_luigi.targets.image_target import TiffImageTarget
 from faim_luigi.tasks.collectors import ImageCollectorTask
 
+from ggjw.tasks.logging import LoggingMixin
+
 
 @requires(ImageCollectorTask)
-class RunBinarySegmentationModelPredictionTask(luigi.Task):
+class RunBinarySegmentationModelPredictionTask(luigi.Task, LoggingMixin):
     '''Applies the given model to a collection of images.
 
     NOTE this workflow projects from 3D to 2D!
@@ -27,7 +29,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
     model_folder = luigi.Parameter()
     model_weights_fname = luigi.Parameter()
     output_folder = luigi.Parameter()
-    verbose = luigi.BoolParameter(default=True)
+    verbose = luigi.BoolParameter(default=False)
 
     patch_size = luigi.IntParameter(
         default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
@@ -61,6 +63,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
         '''
         model = load_model(
             os.path.join(self.model_folder, self.model_weights_fname))
+        self.log_info('Loaded model from {}.'.format(self.model_folder))
 
         def loader_fn(input_target, output_target):
             '''
@@ -93,6 +96,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task):
                             desc='Running segmentation model')
 
         runner(loader_fn, processor_fn, saver_fn, iterable, queue_maxsize=5)
+        self.log_info('Segmented {} images.'.format(len(iterable)))
 
     def output(self):
         '''
