@@ -15,11 +15,12 @@ from dlutils.models import load_model
 from faim_luigi.targets.image_target import TiffImageTarget
 from faim_luigi.tasks.collectors import ImageCollectorTask
 
-from ggjw.tasks.logging import LoggingMixin
+from ggjw.tasks.logging import LGRunnerLoggingMixin
 
 
 @requires(ImageCollectorTask)
-class RunBinarySegmentationModelPredictionTask(luigi.Task, LoggingMixin):
+class RunBinarySegmentationModelPredictionTask(luigi.Task,
+                                               LGRunnerLoggingMixin):
     '''Applies the given model to a collection of images.
 
     NOTE this workflow projects from 3D to 2D!
@@ -65,6 +66,10 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task, LoggingMixin):
             os.path.join(self.model_folder, self.model_weights_fname))
         self.log_info('Loaded model from {}.'.format(self.model_folder))
 
+        # NOTE loading, processing and saving are done with multiple
+        # threads and two queues. Projection and FCN are sequential
+        # and could therefore be optimized.
+
         def loader_fn(input_target, output_target):
             '''
             '''
@@ -73,12 +78,12 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task, LoggingMixin):
         def processor_fn(image, target):
             '''
             '''
-            prediction = (predict_complete(model,
-                                           self.preprocess_fn(image),
-                                           patch_size=self._patch_size,
-                                           border=self.patch_overlap,
-                                           batch_size=self.batch_size)['fg'] *
-                          255).astype(np.uint8)
+            prediction = (predict_complete(
+                model,
+                self.preprocess_fn(image),
+                patch_size=self._patch_size,
+                border=self.patch_overlap,
+                batch_size=self.batch_size)['fg'] * 255).astype(np.uint8)
             return prediction, target
 
         def saver_fn(prediction, target):
@@ -91,12 +96,12 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task, LoggingMixin):
                     if not target.exists()]
 
         if self.verbose:
-            iterable = tqdm(iterable,
-                            ncols=80,
-                            desc='Running segmentation model')
+            iterable = tqdm(
+                iterable, ncols=80, desc='Running segmentation model')
 
         runner(loader_fn, processor_fn, saver_fn, iterable, queue_maxsize=5)
-        self.log_info('Segmented {} images.'.format(len(iterable)))
+        self.log_info('{} done. Segmented {} images.'.format(
+            self.__class__.__name__, len(iterable)))
 
     def output(self):
         '''

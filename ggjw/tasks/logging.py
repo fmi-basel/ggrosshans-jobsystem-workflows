@@ -1,10 +1,12 @@
 import logging
 
 
-class LoggingMixin:
+class LGRunnerLoggingMixin:
     '''
     Mixin for lgrunner logging interface.
     '''
+    # TODO Consider moving this to faim-luigi?
+
     def log(self, level, msg):
         '''
         '''
