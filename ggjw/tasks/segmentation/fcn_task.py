@@ -16,11 +16,18 @@ from faim_luigi.targets.image_target import TiffImageTarget
 from faim_luigi.tasks.collectors import ImageCollectorTask
 
 from ggjw.tasks.logging import LGRunnerLoggingMixin
+from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
+
+
+def add_progress(task, increment):
+    task.trigger_event('event.lgrunner.progress.notification', task,
+                       'add_percentage', increment)
 
 
 @requires(ImageCollectorTask)
 class RunBinarySegmentationModelPredictionTask(luigi.Task,
-                                               LGRunnerLoggingMixin):
+                                               LGRunnerLoggingMixin,
+                                               StoppableTaskMixin):
     '''Applies the given model to a collection of images.
 
     NOTE this workflow projects from 3D to 2D!
@@ -38,6 +45,8 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         default=10, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     batch_size = luigi.IntParameter(
         default=1, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
+
+    accepts_messages = True
 
     @property
     def _patch_size(self):
@@ -67,6 +76,12 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
             os.path.join(self.model_folder, self.model_weights_fname))
         self.log_info('Loaded model from {}.'.format(self.model_folder))
 
+        iterable = [(inp, target)
+                    for inp, target in zip(self.input(), self.output())
+                    if not target.exists()]
+        fraction = 100. / len(self.input())
+        add_progress(self, (len(self.input()) - len(iterable)) * fraction)
+
         # NOTE loading, processing and saving are done with multiple
         # threads and two queues. Projection and FCN are sequential
         # and could therefore be optimized.
@@ -84,6 +99,8 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         def processor_fn(image, target):
             '''
             '''
+            # check if an interrupt has been received.
+            self.raise_if_interrupt_signal()
             try:
                 prediction = (predict_complete(
                     model,
@@ -103,13 +120,18 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
             except Exception as err:
                 self.log_error('Could not save target {}. Error: {}'.format(target.path, err))
 
-        iterable = [(inp, target)
-                    for inp, target in zip(self.input(), self.output())
-                    if not target.exists()]
+            add_progress(self, fraction)
+
+        #iterable = [(inp, target)
+        #            for inp, target in zip(self.input(), self.output())
+        #            if not target.exists()]
 
         if self.verbose:
-            iterable = tqdm(
-                iterable, ncols=80, desc='Running segmentation model')
+            iterable = tqdm(iterable,
+                            ncols=80,
+                            desc='Running segmentation model')
+
+        self.log_info('Starting to process {} images.'.format(len(iterable)))
 
         runner(loader_fn, processor_fn, saver_fn, iterable, queue_maxsize=5)
         self.log_info('{} done. Segmented {} images.'.format(

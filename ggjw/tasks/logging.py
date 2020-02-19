@@ -5,17 +5,17 @@ class LGRunnerLoggingMixin:
     '''
     Mixin for lgrunner logging interface.
     '''
+
     # TODO Consider moving this to faim-luigi?
+    def __init__(self, *args, **kwargs):
+	'''
+	'''
+	self.error_count = 0
 
     def log(self, level, msg):
         '''
         '''
-        self.trigger_event(
-            'event.lgrunner.log.notification',
-            self,
-            level,
-            msg)
-        self.error_count = 0
+        self.trigger_event('event.lgrunner.log.notification', self, level, msg)
 
     def log_error(self, msg):
         '''
