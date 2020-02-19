@@ -15,11 +15,13 @@ class LGRunnerLoggingMixin:
             self,
             level,
             msg)
+        self.error_count = 0
 
     def log_error(self, msg):
         '''
         '''
         self.log(logging.ERROR, msg)
+        self.error_count += 1
 
     def log_info(self, msg):
         '''
