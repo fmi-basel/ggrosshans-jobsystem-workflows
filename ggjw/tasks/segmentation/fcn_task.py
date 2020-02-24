@@ -63,9 +63,10 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         '''
         img = image.min(axis=0)
         if self.downsampling >= 2:
-            img = block_reduce(
-                img, tuple(int(self.downsampling) for _ in range(img.ndim)),
-                np.min)
+            img = block_reduce(img,
+                               tuple(
+                                   int(self.downsampling)
+                                   for _ in range(img.ndim)), np.min)
         return img
 
     def run(self):
@@ -88,26 +89,37 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         def loader_fn(input_target, output_target):
             '''
             '''
-            return input_target.load(), output_target
+            try:
+                return input_target.load(), output_target
+            except Exception as err:
+                self.log_error(
+                    'Could not load image from {}. Error: {}'.format(
+                        input_target.path, err))
 
         def processor_fn(image, target):
             '''
             '''
             # check if an interrupt has been received.
             self.raise_if_interrupt_signal()
-
-            prediction = (predict_complete(model,
-                                           self.preprocess_fn(image),
-                                           patch_size=self._patch_size,
-                                           border=self.patch_overlap,
-                                           batch_size=self.batch_size)['fg'] *
-                          255).astype(np.uint8)
-            return prediction, target
+            try:
+                prediction = (predict_complete(
+                    model,
+                    self.preprocess_fn(image),
+                    patch_size=self._patch_size,
+                    border=self.patch_overlap,
+                    batch_size=self.batch_size)['fg'] * 255).astype(np.uint8)
+                return prediction, target
+            except Exception as err:
+                self.log_error('Could not process target {}. Error: {}'.format(target.path, err))
 
         def saver_fn(prediction, target):
             '''
             '''
-            target.save(prediction)
+            try:
+                target.save(prediction)
+            except Exception as err:
+                self.log_error('Could not save target {}. Error: {}'.format(target.path, err))
+
             add_progress(self, fraction)
 
         #iterable = [(inp, target)
