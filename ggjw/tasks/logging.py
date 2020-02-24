@@ -6,12 +6,6 @@ class LGRunnerLoggingMixin:
     Mixin for lgrunner logging interface.
     '''
 
-    # TODO Consider moving this to faim-luigi?
-    def __init__(self, *args, **kwargs):
-	'''
-	'''
-	self.error_count = 0
-
     def log(self, level, msg):
         '''
         '''
@@ -21,7 +15,6 @@ class LGRunnerLoggingMixin:
         '''
         '''
         self.log(logging.ERROR, msg)
-        self.error_count += 1
 
     def log_info(self, msg):
         '''
