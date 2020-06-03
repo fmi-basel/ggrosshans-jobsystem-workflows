@@ -32,6 +32,9 @@ class ProjectResampleNormalizePreprocessor:
         '''
         '''
         img = tf.convert_to_tensor(img)
+        if self.n_channels == 1 and img.shape[-1] != 1:
+            img = tf.expand_dims(img, -1)
+
         tf.ensure_shape(img, (None, None, None, self.n_channels))
         # project along Z.
         img = tf.reduce_min(img, axis=0, keepdims=True)
