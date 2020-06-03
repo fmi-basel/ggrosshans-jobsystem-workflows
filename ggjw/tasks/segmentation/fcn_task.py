@@ -34,7 +34,7 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
 
     '''
     output_folder = luigi.Parameter()
-    verbose = luigi.BoolParameter(default=False)
+    verbose = luigi.BoolParameter(default=True)
 
     accepts_messages = True
 
@@ -92,9 +92,8 @@ class RunBinarySegmentationModelPredictionTask(
     def _model_input_size(self):
         '''
         '''
-        return tuple(
-            int(val)
-            for val in re.search('(\d+)x(\d+)', self.model_folder).groups())
+        # TODO Delegate this to model loader
+        return (320, 320)
 
     def run(self):
         '''
@@ -114,10 +113,11 @@ class RunBinarySegmentationModelPredictionTask(
             prediction = resample(prediction, original_shape)
 
             try:
-                target.save((prediction * 255).astype('uint8'))
+                target.save((prediction.numpy() * 255).astype('uint8'), compress=9)
             except Exception as err:
-                self.log_error('Could not save target {}. Error: {}'.format(
-                    target.path, err))
+                msg = 'Could not save target {}. Error: {}'.format(
+                    target.path, err)
+                self.log_error(msg)
 
         self.log_info('{} done. Segmented {} images.'.format(
             self.__class__.__name__, len(iterable)))
