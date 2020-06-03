@@ -12,8 +12,8 @@ from ggjw.workflows.base import JobSystemWorkflow
 # basic lookup of model folder. Should be delegated in the future.
 
 
-class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
-    '''worm segmentation with a CNN from DIC image stacks.
+class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask, JobSystemWorkflow):
+    '''worm segmentation with a CNN from brightfield image stacks.
 
     NOTE input is expected to be 3-dim, the first axis is then projected
     and the output is a 2-dim segmentation.
@@ -48,7 +48,7 @@ class WormSegmentationFromDICWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''
 
     model_folder = os.path.join(MODEL_BASE_FOLDER, 'segmentation',
-                                'worms_from_dic', 'v0')
+                                'worms_from_bf', 'v0')
     '''path of saved model.
 
     '''

@@ -1,1 +1,1 @@
-from .worm_segmentation import WormSegmentationFromDICWorkflow
+from .worm_segmentation import WormSegmentationFromBrightFieldWorkflow

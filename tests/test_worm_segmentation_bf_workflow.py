@@ -6,11 +6,12 @@ import luigi
 import numpy as np
 
 from faim_luigi.targets.image_target import TiffImageTarget
-from ggjw.workflows.worm_segmentation import WormSegmentationFromDICWorkflow
+from ggjw.workflows.worm_segmentation import WormSegmentationFromBrightFieldWorkflow
 
 # Test data for workflow
 TEST_DATA = {
-    key: os.path.join(os.path.dirname(__file__), 'data', 'worms_from_dic', key)
+    key: os.path.join(
+        os.path.dirname(__file__), 'data', 'worms_from_dic', key)
     for key in ['img', 'segm']
 }
 
@@ -25,7 +26,7 @@ def binary_intersection_over_union(first, second):
 
 
 def test_workflow(tmpdir):
-    '''test the workflow for worm segmentation from DIC image stacks
+    '''test the workflow for worm segmentation from BrightField image stacks
     on a few test images.
 
     '''
@@ -33,13 +34,15 @@ def test_workflow(tmpdir):
     test_dir = tmpdir / 'worms_from_dic'
     test_dir.mkdir()
 
-    result = luigi.build([
-        WormSegmentationFromDICWorkflow(output_folder=str(test_dir),
-                                        input_folder=input_folder,
-                                        file_pattern='*.stk')
-    ],
-                         local_scheduler=True,
-                         detailed_summary=True)
+    result = luigi.build(
+        [
+            WormSegmentationFromBrightFieldWorkflow(
+                output_folder=str(test_dir),
+                input_folder=input_folder,
+                file_pattern='*.stk')
+        ],
+        local_scheduler=True,
+        detailed_summary=True)
 
     if result.status not in [
             luigi.execution_summary.LuigiStatusCode.SUCCESS,
@@ -77,11 +80,13 @@ def test_workflow_error_on_no_input(tmpdir):
     input_folder = tmpdir / 'empty'
     input_folder.mkdir()
 
-    result = luigi.build([
-        WormSegmentationFromDICWorkflow(output_folder=str(input_folder),
-                                        input_folder=str(input_folder),
-                                        file_pattern='stuff.stk')
-    ],
-                         local_scheduler=True,
-                         detailed_summary=True)
+    result = luigi.build(
+        [
+            WormSegmentationFromBrightFieldWorkflow(
+                output_folder=str(input_folder),
+                input_folder=str(input_folder),
+                file_pattern='stuff.stk')
+        ],
+        local_scheduler=True,
+        detailed_summary=True)
     assert result.status == luigi.execution_summary.LuigiStatusCode.SCHEDULING_FAILED
