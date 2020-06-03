@@ -1,7 +1,6 @@
 import os
 from glob import glob
 
-import pytest
 import luigi
 import numpy as np
 

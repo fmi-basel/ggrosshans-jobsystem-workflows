@@ -2,6 +2,7 @@
 
 '''
 import os
+import re
 
 import luigi
 from luigi.util import requires
@@ -17,6 +18,7 @@ from faim_luigi.tasks.collectors import ImageCollectorTask
 
 from ggjw.tasks.logging import LGRunnerLoggingMixin
 from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
+from .preprocessor import ProjectResampleNormalizePreprocessor, resample
 
 
 def add_progress(task, increment):
@@ -25,10 +27,105 @@ def add_progress(task, increment):
 
 
 @requires(ImageCollectorTask)
-class RunBinarySegmentationModelPredictionTask(luigi.Task,
-                                               LGRunnerLoggingMixin,
-                                               StoppableTaskMixin):
+class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
+                                          StoppableTaskMixin):
+    '''encapsulates model-unspecific parts of the segmentation
+    task.
+
+    '''
+    output_folder = luigi.Parameter()
+    verbose = luigi.BoolParameter(default=False)
+
+    accepts_messages = True
+
+    def _get_iterable(self):
+        '''returns iterable over input and target pairs.
+        '''
+        iterable = [(inp, target)
+                    for inp, target in zip(self.input(), self.output())
+                    if not target.exists()]
+
+        self._fraction = 100. / len(self.input())
+        add_progress(self,
+                     (len(self.input()) - len(iterable)) * self._fraction)
+
+        if self.verbose:
+            iterable = tqdm(
+                iterable, ncols=80, desc='Running segmentation model')
+
+        return iterable
+
+    def output(self):
+        '''
+        '''
+        if not self.input():
+            raise ValueError('No input images provided!')
+
+        def _get_fname(img_path):
+            return os.path.splitext(os.path.basename(img_path))[0] + '.tif'
+
+        return [
+            TiffImageTarget(
+                os.path.join(self.output_folder,
+                             _get_fname(input_target.path)))
+            for input_target in self.input()
+        ]
+
+
+class RunBinarySegmentationModelPredictionTask(
+        BaseSegmentationModelPredictionTask):
     '''Applies the given model to a collection of images.
+    '''
+
+    model_folder = luigi.Parameter()
+    model_weights_fname = luigi.Parameter()
+
+    def load_model(self):
+        '''
+        '''
+        model = load_model(
+            os.path.join(self.model_folder, self.model_weights_fname))
+        self.log_info('Loaded model from {}.'.format(self.model_folder))
+        return model
+
+    @property
+    def _model_input_size(self):
+        '''
+        '''
+        return tuple(
+            int(val)
+            for val in re.search('(\d+)x(\d+)', self.model_folder).groups())
+
+    def run(self):
+        '''
+        '''
+        model = self.load_model()
+        preprocessor = ProjectResampleNormalizePreprocessor(
+            self._model_input_size)
+
+        iterable = self._get_iterable()
+        self.log_info('Starting to process {} images.'.format(len(iterable)))
+
+        for sample, target in iterable:
+            img = sample.load()
+            original_shape = img.shape[1:]
+
+            prediction = model.predict(preprocessor.preprocess(img))
+            prediction = resample(prediction, original_shape)
+
+            try:
+                target.save((prediction * 255).astype('uint8'))
+            except Exception as err:
+                self.log_error('Could not save target {}. Error: {}'.format(
+                    target.path, err))
+
+        self.log_info('{} done. Segmented {} images.'.format(
+            self.__class__.__name__, len(iterable)))
+
+
+class RunBinarySegmentationModelPredictionTaskV0(
+        BaseSegmentationModelPredictionTask):
+    '''Applies the given "old-style" model to a collection of images.
 
     NOTE this workflow projects from 3D to 2D!
 
@@ -36,8 +133,6 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
     downsampling = luigi.IntParameter(default=1)
     model_folder = luigi.Parameter()
     model_weights_fname = luigi.Parameter()
-    output_folder = luigi.Parameter()
-    verbose = luigi.BoolParameter(default=False)
 
     patch_size = luigi.IntParameter(
         default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
@@ -45,8 +140,6 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         default=10, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
     batch_size = luigi.IntParameter(
         default=1, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
-
-    accepts_messages = True
 
     @property
     def _patch_size(self):
@@ -63,10 +156,9 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
         '''
         img = image.min(axis=0)
         if self.downsampling >= 2:
-            img = block_reduce(img,
-                               tuple(
-                                   int(self.downsampling)
-                                   for _ in range(img.ndim)), np.min)
+            img = block_reduce(
+                img, tuple(int(self.downsampling) for _ in range(img.ndim)),
+                np.min)
         return img
 
     def run(self):
@@ -76,11 +168,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
             os.path.join(self.model_folder, self.model_weights_fname))
         self.log_info('Loaded model from {}.'.format(self.model_folder))
 
-        iterable = [(inp, target)
-                    for inp, target in zip(self.input(), self.output())
-                    if not target.exists()]
-        fraction = 100. / len(self.input())
-        add_progress(self, (len(self.input()) - len(iterable)) * fraction)
+        iterable = self._get_iterable()
 
         # NOTE loading, processing and saving are done with multiple
         # threads and two queues. Projection and FCN are sequential
@@ -110,7 +198,8 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
                     batch_size=self.batch_size)['fg'] * 255).astype(np.uint8)
                 return prediction, target
             except Exception as err:
-                self.log_error('Could not process target {}. Error: {}'.format(target.path, err))
+                self.log_error('Could not process target {}. Error: {}'.format(
+                    target.path, err))
 
         def saver_fn(prediction, target):
             '''
@@ -118,37 +207,13 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
             try:
                 target.save(prediction)
             except Exception as err:
-                self.log_error('Could not save target {}. Error: {}'.format(target.path, err))
+                self.log_error('Could not save target {}. Error: {}'.format(
+                    target.path, err))
 
-            add_progress(self, fraction)
-
-        #iterable = [(inp, target)
-        #            for inp, target in zip(self.input(), self.output())
-        #            if not target.exists()]
-
-        if self.verbose:
-            iterable = tqdm(iterable,
-                            ncols=80,
-                            desc='Running segmentation model')
+            add_progress(self, self._fraction)
 
         self.log_info('Starting to process {} images.'.format(len(iterable)))
 
         runner(loader_fn, processor_fn, saver_fn, iterable, queue_maxsize=5)
         self.log_info('{} done. Segmented {} images.'.format(
             self.__class__.__name__, len(iterable)))
-
-    def output(self):
-        '''
-        '''
-        if not self.input():
-            raise ValueError('No input images provided!')
-
-        def _get_fname(img_path):
-            return os.path.splitext(os.path.basename(img_path))[0] + '.tif'
-
-        return [
-            TiffImageTarget(
-                os.path.join(self.output_folder,
-                             _get_fname(input_target.path)))
-            for input_target in self.input()
-        ]
