@@ -45,6 +45,13 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
 
     '''
 
+    auto_rescale = luigi.BoolParameter(default=False)
+    '''If set to True, rescale intensities for each image independently.
+    Otherwise, the intensities are expected to be similar to the training
+    data. 
+
+    '''
+
     output_folder = luigi.Parameter()
     '''output folder into which the segmentations will be written.
 
@@ -71,6 +78,7 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
             file_pattern=self.file_pattern,
             output_folder=self.output_folder,
             model_folder=self.model_folder,
+            auto_rescale=self.auto_rescale,
             model_weights_fname=self.model_weights_fname)
 
 

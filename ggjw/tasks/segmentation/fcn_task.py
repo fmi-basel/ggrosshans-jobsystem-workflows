@@ -138,6 +138,7 @@ class RunBinarySegmentationModelPredictionTaskV0(
     downsampling = luigi.IntParameter(default=1)
     model_folder = luigi.Parameter()
     model_weights_fname = luigi.Parameter()
+    auto_rescale = luigi.BoolParameter(default=False)
 
     patch_size = luigi.IntParameter(
         default=None, visibility=luigi.parameter.ParameterVisibility.HIDDEN)
@@ -160,6 +161,12 @@ class RunBinarySegmentationModelPredictionTaskV0(
         '''
         '''
         img = image.min(axis=0)
+
+        if self.auto_rescale:
+            lower, upper = np.percentile(img.flat, (0, 100))
+            LOW, HIGH = 0, 8000  # Consider replacing this hack with a proper solution.
+            factor = (HIGH - LOW) / (upper - lower)
+            img = (img.astype('float32') - lower) * factor + LOW
         if self.downsampling >= 2:
             img = block_reduce(
                 img, tuple(int(self.downsampling) for _ in range(img.ndim)),
