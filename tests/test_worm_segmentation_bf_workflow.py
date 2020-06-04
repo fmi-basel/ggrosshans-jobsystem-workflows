@@ -1,11 +1,14 @@
 import os
 from glob import glob
 
+import pytest
 import luigi
 import numpy as np
 
 from faim_luigi.targets.image_target import TiffImageTarget
 from ggjw.workflows.worm_segmentation import WormSegmentationFromBrightFieldWorkflow
+from ggjw.workflows.worm_segmentation import ExperimentalWormSegmentationFromBrightFieldWorkflow
+
 
 # Test data for workflow
 TEST_DATA = {
@@ -24,7 +27,10 @@ def binary_intersection_over_union(first, second):
         first, second).sum() / (np.logical_or(first, second).sum() + 1.)
 
 
-def test_workflow(tmpdir):
+@pytest.mark.parametrize('workflow',
+                         [WormSegmentationFromBrightFieldWorkflow,
+                          ExperimentalWormSegmentationFromBrightFieldWorkflow])
+def test_workflow(tmpdir, workflow):
     '''test the workflow for worm segmentation from BrightField image stacks
     on a few test images.
 
@@ -35,7 +41,7 @@ def test_workflow(tmpdir):
 
     result = luigi.build(
         [
-            WormSegmentationFromBrightFieldWorkflow(
+            workflow(
                 output_folder=str(test_dir),
                 input_folder=input_folder,
                 file_pattern='*.stk')
@@ -69,10 +75,13 @@ def test_workflow(tmpdir):
 
         # test lower bound on iou.
         iou = binary_intersection_over_union(pred >= 127, ref_segm)
-        assert iou >= 0.5
+        assert iou >= 0.48
 
 
-def test_workflow_error_on_no_input(tmpdir):
+@pytest.mark.parametrize('workflow',
+                         [WormSegmentationFromBrightFieldWorkflow,
+                          ExperimentalWormSegmentationFromBrightFieldWorkflow])
+def test_workflow_error_on_no_input(tmpdir, workflow):
     '''test if the workflow raises an error if there are no images
     found that match the file pattern.
     '''
@@ -81,7 +90,7 @@ def test_workflow_error_on_no_input(tmpdir):
 
     result = luigi.build(
         [
-            WormSegmentationFromBrightFieldWorkflow(
+            workflow(
                 output_folder=str(input_folder),
                 input_folder=str(input_folder),
                 file_pattern='stuff.stk')
