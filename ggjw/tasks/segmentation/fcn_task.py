@@ -66,7 +66,7 @@ class RunBinarySegmentationModelPredictionTask(luigi.Task,
 
         if self.auto_rescale:
             lower, upper = np.percentile(img.flat, (0, 100))
-            LOW, HIGH = 0, 8000  # TODO replace this hack with a proper solution.
+            LOW, HIGH = 0, 8000  # Consider replacing this hack with a proper solution.
             factor = (HIGH - LOW) / (upper - lower)
             img = (img.astype('float32') - lower) * factor + LOW
         if self.downsampling >= 2:
