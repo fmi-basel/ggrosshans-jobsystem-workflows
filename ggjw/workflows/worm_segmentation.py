@@ -115,10 +115,6 @@ class ExperimentalWormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
     '''path of saved model.
 
     '''
-    model_weights_fname = 'model_latest.h5'
-    '''file name of model weights.
-
-    '''
 
     task_namespace = 'ggrosshans'
     resources = {'gpu': 1}
@@ -130,5 +126,4 @@ class ExperimentalWormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
             input_folder=self.input_folder,
             file_pattern=self.file_pattern,
             output_folder=self.output_folder,
-            model_folder=self.model_folder,
-            model_weights_fname=self.model_weights_fname)
+            model_folder=self.model_folder)

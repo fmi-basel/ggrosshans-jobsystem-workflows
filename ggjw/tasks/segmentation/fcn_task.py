@@ -2,13 +2,14 @@
 
 '''
 import os
-import re
 
 import luigi
 from luigi.util import requires
 import numpy as np
 from tqdm import tqdm
 from skimage.measure import block_reduce
+
+import tensorflow as tf
 
 from dlutils.prediction import predict_complete
 from dlutils.prediction.runner import runner
@@ -18,7 +19,6 @@ from faim_luigi.tasks.collectors import ImageCollectorTask
 
 from ggjw.tasks.logging import LGRunnerLoggingMixin
 from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
-from .preprocessor import ProjectResampleNormalizePreprocessor, resample
 
 
 def add_progress(task, increment):
@@ -50,8 +50,9 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
                      (len(self.input()) - len(iterable)) * self._fraction)
 
         if self.verbose:
-            iterable = tqdm(
-                iterable, ncols=80, desc='Running segmentation model')
+            iterable = tqdm(iterable,
+                            ncols=80,
+                            desc='Running segmentation model')
 
         return iterable
 
@@ -74,53 +75,57 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
 
 class RunBinarySegmentationModelPredictionTask(
         BaseSegmentationModelPredictionTask):
-    '''Applies the given model to a collection of images.
+    '''Applies a given (deployed) model to a collection of images.
     '''
 
     model_folder = luigi.Parameter()
-    model_weights_fname = luigi.Parameter()
 
-    def load_model(self):
+    model_signature = luigi.Parameter(default='serve')
+    model_output_name = luigi.Parameter(default='output_0')
+
+    def load_predictor(self):
+        ''' loads model and returns function to call the respective
+        signature. The signature is expected to be a complete serve,
+        i.e. include preprocessing and potential postprocessing.
         '''
-        '''
-        model = load_model(
-            os.path.join(self.model_folder, self.model_weights_fname))
+        self._model = tf.saved_model.load(self.model_folder)
         self.log_info('Loaded model from {}.'.format(self.model_folder))
-        return model
-
-    @property
-    def _model_input_size(self):
-        '''
-        '''
-        # TODO Delegate this to model loader
-        return (320, 320)
+        return self._model.signatures[self.model_signature]
 
     def run(self):
         '''
         '''
-        model = self.load_model()
-        preprocessor = ProjectResampleNormalizePreprocessor(
-            self._model_input_size)
+        predict = self.load_predictor()
 
         iterable = self._get_iterable()
         self.log_info('Starting to process {} images.'.format(len(iterable)))
 
-        for sample, target in iterable:
-            img = sample.load()
-            original_shape = img.shape[1:]
+        for input_handle, target in iterable:
 
-            prediction = model.predict(preprocessor.preprocess(img))
-            prediction = resample(prediction, original_shape)
+            self.raise_if_interrupt_signal()
 
             try:
-                target.save((prediction.numpy() * 255).astype('uint8'), compress=9)
+                img = input_handle.load()
             except Exception as err:
-                msg = 'Could not save target {}. Error: {}'.format(
-                    target.path, err)
-                self.log_error(msg)
+                self.log_error(
+                    'Could not load image from {}. Error: {}'.format(
+                        input_handle.path, err))
+
+            try:
+                prediction = predict(
+                    tf.convert_to_tensor(img))[self.model_output_name]
+            except Exception as err:
+                self.log_error('Could not process target {}. Error: {}'.format(
+                    target.path, err))
+
+            try:
+                target.save(prediction.numpy(), compress=9)
+            except Exception as err:
+                self.log_error('Could not save target. Error: {}'.format(err))
 
         self.log_info('{} done. Segmented {} images.'.format(
-            self.__class__.__name__, len(iterable)))
+            self.__class__.__name__,
+            sum(target.exists() for _, target in iterable)))
 
 
 class RunBinarySegmentationModelPredictionTaskV0(
@@ -190,12 +195,13 @@ class RunBinarySegmentationModelPredictionTaskV0(
             # check if an interrupt has been received.
             self.raise_if_interrupt_signal()
             try:
-                prediction = (predict_complete(
-                    model,
-                    self.preprocess_fn(image),
-                    patch_size=self._patch_size,
-                    border=self.patch_overlap,
-                    batch_size=self.batch_size)['fg'] * 255).astype(np.uint8)
+                prediction = (
+                    predict_complete(model,
+                                     self.preprocess_fn(image),
+                                     patch_size=self._patch_size,
+                                     border=self.patch_overlap,
+                                     batch_size=self.batch_size)['fg'] *
+                    255).astype(np.uint8)
                 return prediction, target
             except Exception as err:
                 self.log_error('Could not process target {}. Error: {}'.format(
