@@ -45,16 +45,24 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
                     for inp, target in zip(self.input(), self.output())
                     if not target.exists()]
 
-        self._fraction = 100. / len(self.input())
-        add_progress(self,
-                     (len(self.input()) - len(iterable)) * self._fraction)
-
         if self.verbose:
             iterable = tqdm(iterable,
                             ncols=80,
                             desc='Running segmentation model')
-
         return iterable
+
+    def _report_initial(self, iterable):
+        '''reports number of inputs to process and updates
+        the progressbar.
+        '''
+        num_inputs = len(self.input())
+        num_done = len(self.input()) - len(iterable)
+        self.log_info(
+            'Found {} input images. {} are already processed.'.format(
+                num_inputs, num_done))
+
+        self._fraction = 100. / num_inputs
+        add_progress(self, num_done * self._fraction)
 
     def output(self):
         '''
