@@ -107,8 +107,8 @@ class RunBinarySegmentationModelPredictionTask(
         '''
         '''
         predict = self.load_predictor()
-
         iterable = self._get_iterable()
+        self._report_initial(iterable)
         self.log_info('Starting to process {} images.'.format(len(iterable)))
 
         for input_handle, target in iterable:
@@ -200,6 +200,8 @@ class RunBinarySegmentationModelPredictionTaskV0(
         self.log_info('Loaded model from {}.'.format(self.model_folder))
 
         iterable = self._get_iterable()
+        self._report_initial(iterable)
+
 
         # NOTE loading, processing and saving are done with multiple
         # threads and two queues. Projection and FCN are sequential
