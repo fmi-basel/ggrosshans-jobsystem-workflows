@@ -2,7 +2,18 @@
 
 [WIP] Intended to be used with the ```minimal-job-system```.
 
-## Installation notes
+## Installation
+
+```
+pip install -e .
+./fetch_data_and_models.sh
+python -m pytest tests/
+```
+
+### Notes
+
+- Install as editable to avoid having to copy/link models
+- fetch_data_and_models.sh needs rsync and a mount to tungsten.
 
 
 ### Adjusting task parameters
@@ -15,7 +26,7 @@ doesnt have enough VRAM to process the entire input image as one.
 This can be done in the ```luigi.cfg``` as follows:
 
 ```
-[RunBinarySegmentationModelPredictionTask]
+[RunBinarySegmentationModelPredictionTaskV0]
 patch_size=576
 patch_overlap=64
 
