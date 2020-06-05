@@ -18,7 +18,7 @@ setup(
     install_requires=[
         'luigi',
         'pytest',
-        'scikit-image',
+        'scikit-image>=0.16,<0.17',
         'numpy',
         'tqdm',
         'faim-luigi',
