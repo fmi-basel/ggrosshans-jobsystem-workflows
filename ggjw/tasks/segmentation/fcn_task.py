@@ -34,7 +34,7 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
 
     '''
     output_folder = luigi.Parameter()
-    verbose = luigi.BoolParameter(default=True)
+    verbose = luigi.BoolParameter(default=False)
 
     accepts_messages = True
 
