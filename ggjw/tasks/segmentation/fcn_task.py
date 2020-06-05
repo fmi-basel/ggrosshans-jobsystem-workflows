@@ -104,24 +104,32 @@ class RunBinarySegmentationModelPredictionTask(
 
             self.raise_if_interrupt_signal()
 
+            # load data
             try:
                 img = input_handle.load()
             except Exception as err:
                 self.log_error(
                     'Could not load image from {}. Error: {}'.format(
                         input_handle.path, err))
+                continue
 
+            # process
             try:
                 prediction = predict(
                     tf.convert_to_tensor(img))[self.model_output_name]
             except Exception as err:
                 self.log_error('Could not process target {}. Error: {}'.format(
                     target.path, err))
+                continue
 
+            # save
             try:
                 target.save(prediction.numpy(), compress=9)
             except Exception as err:
                 self.log_error('Could not save target. Error: {}'.format(err))
+
+            # update progress
+            add_progress(self, self._fraction)
 
         self.log_info('{} done. Segmented {} images.'.format(
             self.__class__.__name__,
