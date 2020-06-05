@@ -51,6 +51,10 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
                             desc='Running segmentation model')
         return iterable
 
+    @property
+    def _fraction(self):
+        return 100. / len(self.input())
+
     def _report_initial(self, iterable):
         '''reports number of inputs to process and updates
         the progressbar.
@@ -61,7 +65,6 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
             'Found {} input images. {} are already processed.'.format(
                 num_inputs, num_done))
 
-        self._fraction = 100. / num_inputs
         add_progress(self, num_done * self._fraction)
 
     def output(self):
