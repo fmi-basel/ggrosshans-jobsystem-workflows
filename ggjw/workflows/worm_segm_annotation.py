@@ -17,8 +17,8 @@ from ggjw.tasks.segmentation.prepare_for_annotation import PrepareManuallySelect
 
 class PrepareRandomlySelectedImagesForAnnotationWorkflow(
         luigi.WrapperTask, JobSystemWorkflow):
-    '''Prepare images for annotation based on a manually generated
-    list of positions and timepoints.
+    '''Prepare images for annotation by random sampling from
+    the given experiment.
     '''
 
     input_folder = luigi.Parameter()
