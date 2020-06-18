@@ -35,6 +35,7 @@ class PrepareImagesForAnnotationBase(luigi.Task, LGRunnerLoggingMixin,
     output_folder = luigi.Parameter()
     '''output folder to write projections into.
     '''
+
     @property
     def img_outdir(self):
         return os.path.join(self.output_folder, 'img')
@@ -93,8 +94,7 @@ class PrepareImagesForAnnotationBase(luigi.Task, LGRunnerLoggingMixin,
 
         return [(TiffImageTarget(os.path.join(self.img_outdir, fname)),
                  TiffImageTarget(os.path.join(self.segm_outdir, fname)))
-                for fname in (_get_fname(path)
-                              for path in candidates)]
+                for fname in (_get_fname(path) for path in candidates)]
 
 
 class PrepareRandomlySelectedImagesForAnnotation(PrepareImagesForAnnotationBase
@@ -109,6 +109,7 @@ class PrepareRandomlySelectedImagesForAnnotation(PrepareImagesForAnnotationBase
     seed = luigi.IntParameter(default=13)
     '''seed for random sampling.
     '''
+
     def _get_candidates(self):
         '''
         '''
@@ -151,6 +152,7 @@ class PrepareManuallySelectedImagesForAnnotation(PrepareImagesForAnnotationBase
     delimiter = luigi.Parameter(default='_')
     '''delimiter between position and timepoint in filename.
     '''
+
     def _get_candidates(self):
         '''
         '''
@@ -162,16 +164,16 @@ class PrepareManuallySelectedImagesForAnnotation(PrepareImagesForAnnotationBase
             raise
 
         for _, row in candidates.iterrows():
-            paths = sorted(
-                glob.glob(
-                    os.path.join(
-                        self.input_folder, row['folder'], self.file_pattern +
-                        self.delimiter + row['position'] + self.delimiter +
-                        row['timepoint'] + self.file_extension)))
+            fname = os.path.join(
+                self.input_folder, row['folder'],
+                self.file_pattern + self.delimiter + row['position'] +
+                self.delimiter + row['timepoint'] + self.file_extension)
+            paths = sorted(glob.glob(fname))
 
-            if len(paths) < 1:
-                self.log_error(
-                    'Did not find any match for file: {}'.format(path))
+            if not paths:
+                err_msg = 'Did not find any match for: {}'.format(fname)
+                self.log_error(err_msg)
+                raise RuntimeError(err_msg)
                 continue
 
             for path in paths:
