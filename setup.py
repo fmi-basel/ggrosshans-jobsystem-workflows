@@ -18,6 +18,7 @@ setup(
     install_requires=[
         'luigi',
         'pytest',
+        'pandas',
         'scikit-image>=0.16,<0.17',
         'numpy',
         'tqdm',

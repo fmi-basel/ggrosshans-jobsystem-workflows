@@ -1,5 +1,11 @@
 import logging
 
+def add_progress(task, increment):
+    '''Updates progress in frontend through lgrunner.
+    '''
+    task.trigger_event('event.lgrunner.progress.notification', task,
+                       'add_percentage', increment)
+
 
 class LGRunnerLoggingMixin:
     '''
