@@ -66,6 +66,7 @@ class PrepareImagesForAnnotationBase(luigi.Task, LGRunnerLoggingMixin,
         os.makedirs(self.segm_outdir, exist_ok=True)
 
         candidates = list(self._get_candidates())
+        self.log_info('Preparing {} images for annotation.'.format(len(candidates)))
 
         for path, (img_target, segm_target) in zip(candidates, self.output()):
 
@@ -80,6 +81,7 @@ class PrepareImagesForAnnotationBase(luigi.Task, LGRunnerLoggingMixin,
                             path, err))
 
             add_progress(self, 1. / len(candidates))
+        self.log_info('Done.')
 
     def output(self):
         '''returns a list of image-segmentation target pairs.
