@@ -17,13 +17,8 @@ from dlutils.models import load_model
 from faim_luigi.targets.image_target import TiffImageTarget
 from faim_luigi.tasks.collectors import ImageCollectorTask
 
-from ggjw.tasks.logging import LGRunnerLoggingMixin
+from ggjw.tasks.logging import LGRunnerLoggingMixin, add_progress
 from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
-
-
-def add_progress(task, increment):
-    task.trigger_event('event.lgrunner.progress.notification', task,
-                       'add_percentage', increment)
 
 
 @requires(ImageCollectorTask)
@@ -201,7 +196,6 @@ class RunBinarySegmentationModelPredictionTaskV0(
 
         iterable = self._get_iterable()
         self._report_initial(iterable)
-
 
         # NOTE loading, processing and saving are done with multiple
         # threads and two queues. Projection and FCN are sequential
