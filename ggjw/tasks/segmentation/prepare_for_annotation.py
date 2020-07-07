@@ -159,7 +159,7 @@ class PrepareManuallySelectedImagesForAnnotation(PrepareImagesForAnnotationBase
         '''
         '''
         try:
-            candidates = pandas.read_csv(self.input_file)
+            candidates = pandas.read_csv(self.input_file, dtype=str)
         except Exception as err:
             self.log_error('Could not parse {}: {}'.format(
                 self.input_file, err))
