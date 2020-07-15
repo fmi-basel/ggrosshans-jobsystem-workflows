@@ -1,19 +1,28 @@
 import os
+import subprocess
 import luigi
 
 from faim_luigi.tasks.knime import KnimeWrapperTaskBase
 from faim_luigi.tasks.knime import format_workflow_arg
 from faim_luigi.tasks.knime import format_workflow_variable_arg
 
+from ggjw.tasks.logging import LGRunnerLoggingMixin
 
-class WormQuantificationTask(KnimeWrapperTaskBase):
+DEFAULT_WORKFLOW = os.path.join(os.path.dirname(__file__), 'res',
+                                'worm_quantification_cnn.knwf')
+
+
+class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin):
     '''executes the worm quantification workflow in KNIME.
 
     NOTE the workflow needs to have all variables that are handed over
     in workflow_args defined as global flow variables!
 
     '''
-    workflow_path = luigi.Parameter()
+
+    workflow_path = luigi.Parameter(default=DEFAULT_WORKFLOW)
+    '''path to knime workflow.
+    '''
 
     image_folder = luigi.Parameter()
     segm_folder = luigi.Parameter()
@@ -23,7 +32,6 @@ class WormQuantificationTask(KnimeWrapperTaskBase):
     '''fname pattern matching images of the channel that should
     be quantified. E.g. "*w1*" for all images with w1 in the filename.
     '''
-
     @property
     def output_folder_images(self):
         return os.path.join(self.output_folder, 'kymographs')
@@ -54,10 +62,22 @@ class WormQuantificationTask(KnimeWrapperTaskBase):
             ]
         ]
 
+    def run(self):
+        self.log_info('Starting knime workflow...')
+        try:
+            super().run()
+        except subprocess.CalledProcessError as err:
+            self.log_error('Knime workflow ({}) failed. Error log: {}'.format(
+                self.workflow_path, err.stderr))
+            raise
+        self.log_info('Done.')
+
     def output(self):
         '''NOTE only check for successfully generated statistics
         and ignore the kymograph images for the time being.
 
         '''
-        return [luigi.LocalTarget(path) for path in
-                [self.output_path_csv, self.output_path_table]]
+        return [
+            luigi.LocalTarget(path)
+            for path in [self.output_path_csv, self.output_path_table]
+        ]
