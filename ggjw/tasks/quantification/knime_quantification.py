@@ -1,4 +1,5 @@
 import os
+import logging
 import subprocess
 import luigi
 
@@ -79,6 +80,8 @@ class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin,
         '''
         cmd = self.compose_call()
 
+        logger = logging.getLogger('luigi-interface')
+
         with open(self.output_path_log, 'w') as logfile, \
              subprocess.Popen(args=cmd,
                               stdout=logfile,
@@ -87,8 +90,13 @@ class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin,
             self.log_info('Starting knime workflow...')
 
             while True:
-                self.raise_if_interrupt_signal()
-
+                try:
+                    self.raise_if_interrupt_signal()
+                except:
+                    logger.debug('Sending kill signal to knime process')
+                    process.kill()
+                    logger.debug('Kill signal sent')
+                    raise
                 try:
                     retcode = process.wait(timeout=1.0)
                     if retcode:
