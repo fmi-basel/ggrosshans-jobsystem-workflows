@@ -22,6 +22,6 @@ setup(
         'scikit-image>=0.16,<0.17',
         'numpy',
         'tqdm',
-        'faim-luigi',
+        'faim-luigi>=0.1',
         'dl-utils'
     ])

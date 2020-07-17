@@ -48,7 +48,7 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
     auto_rescale = luigi.BoolParameter(default=False)
     '''If set to True, rescale intensities for each image independently.
     Otherwise, the intensities are expected to be similar to the training
-    data. 
+    data.
 
     '''
 
