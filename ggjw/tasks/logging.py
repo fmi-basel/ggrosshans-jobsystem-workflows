@@ -1,5 +1,6 @@
 import logging
 
+
 def add_progress(task, increment):
     '''Updates progress in frontend through lgrunner.
     '''
@@ -15,6 +16,7 @@ class LGRunnerLoggingMixin:
     def log(self, level, msg):
         '''
         '''
+        logging.getLogger('luigi-interface').log(level, msg)
         self.trigger_event('event.lgrunner.log.notification', self, level, msg)
 
     def log_error(self, msg):
