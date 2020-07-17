@@ -2,9 +2,11 @@ import os
 from glob import glob
 import luigi
 import numpy as np
+import pytest
 
 from faim_luigi.targets.image_target import TiffImageTarget
 from ggjw.tasks.compression.compression_simple import StkToCompressedTifTask
+from ggjw.workflows import StkToTifImageCompressionWorkflow
 
 # Test data for workflow
 TEST_DATA = {
@@ -15,16 +17,18 @@ TEST_DATA = {
 }
 
 
-def test_compression_task(tmpdir):
+@pytest.mark.parametrize(
+    'workflow', [StkToCompressedTifTask, StkToTifImageCompressionWorkflow])
+def test_compression_task(tmpdir, workflow):
     '''
     '''
     input_folder = TEST_DATA['img']
     test_dir = tmpdir
 
     result = luigi.build([
-        StkToCompressedTifTask(output_folder=str(test_dir),
-                               input_folder=input_folder,
-                               file_pattern='*.stk')
+        workflow(output_folder=str(test_dir),
+                 input_folder=input_folder,
+                 file_pattern='*.stk')
     ],
                          local_scheduler=True,
                          detailed_summary=True)
@@ -38,10 +42,12 @@ def test_compression_task(tmpdir):
 
     references = [
         TiffImageTarget(path)
-        for path in sorted(glob(os.path.join(TEST_DATA['img'], '*stk')))]
+        for path in sorted(glob(os.path.join(TEST_DATA['img'], '*stk')))
+    ]
     compressed = [
         TiffImageTarget(path)
-        for path in sorted(glob(os.path.join(str(test_dir), '*tif')))]
+        for path in sorted(glob(os.path.join(str(test_dir), '*tif')))
+    ]
 
     assert len(references) >= 1
     assert len(references) == len(compressed)
