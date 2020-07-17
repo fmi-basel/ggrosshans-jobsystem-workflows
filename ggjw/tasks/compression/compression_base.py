@@ -38,6 +38,7 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
         iterable = self._get_iterable()
         self._report_initial(iterable)
         self.log_info('Starting to convert {} images'.format(len(iterable)))
+        error_count = 0
 
         for input_handle, target in iterable:
             self.raise_if_interrupt_signal()
@@ -48,8 +49,12 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
                 self.log_error(
                     'Failed to convert the input/output pair: {}, {}. Error: {}'
                     .format(input_handle.path, target.path, err))
+                error_count += 1
 
             add_progress(self, self._fraction)
+
+        if error_count >= 1:
+            raise RuntimeError('Encountered {} errors!'.format(error_count))
 
     def _get_iterable(self) -> list:
         '''returns iterable over input and target pairs.

@@ -20,14 +20,14 @@ class StkToCompressedTifTask(BaseCompressionTask):
     compression = ('deflate', 9)  # tifffile specific.
 
     def get_target(self, input_handle):
-        '''
+        '''creates tif target in output_folder.
         '''
         fname = os.path.splitext(os.path.basename(
             input_handle.path))[0] + '.tif'
         return TiffImageTarget(os.path.join(self.output_folder, fname))
 
-    def convert(self, input_handle, output_handle):
+    def convert(self, input_target, output_target):
+        '''writes tif
         '''
-        '''
-        img = input_handle.load()
-        output_handle.save(img, compress=self.compression)
+        img = input_target.load()
+        output_target.save(img, compress=self.compression)
