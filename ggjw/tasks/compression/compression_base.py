@@ -55,6 +55,7 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
 
         if error_count >= 1:
             raise RuntimeError('Encountered {} errors!'.format(error_count))
+        self.log_info('Done.')
 
     def _get_iterable(self) -> list:
         '''returns iterable over input and target pairs.
