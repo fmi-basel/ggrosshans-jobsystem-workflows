@@ -2,6 +2,9 @@
 
 '''
 import abc
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import as_completed
+
 import luigi
 from luigi.util import requires
 
@@ -18,6 +21,8 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
     '''
 
     accepts_messages = True
+
+    num_threads = luigi.IntParameter(default=8)
 
     @abc.abstractmethod
     def get_target(self, input_handle):
@@ -40,18 +45,28 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
         self.log_info('Starting to convert {} images'.format(len(iterable)))
         error_count = 0
 
-        for input_handle, target in iterable:
-            self.raise_if_interrupt_signal()
+        with ThreadPoolExecutor(max_workers=self.num_threads) as pool:
 
-            try:
-                self.convert(input_handle, target)
-            except Exception as err:
-                self.log_error(
-                    'Failed to convert the input/output pair: {}, {}. Error: {}'
-                    .format(input_handle.path, target.path, err))
-                error_count += 1
+            futures = [
+                pool.submit(self.convert, input_handle, target)
+                for input_handle, target in iterable
+            ]
 
-            add_progress(self, self._fraction)
+            for future in as_completed(futures):
+
+                # NOTE we assume here that the individual steps are
+                # fast enough such that we dont need to have an extra
+                # waiting loop to check for interrupts.
+                self.raise_if_interrupt_signal()
+
+                try:
+                    future.result()
+                except Exception as err:
+                    self.log_error(
+                        'Failed to convert an item. Error: {}'.format(err))
+                    error_count += 1
+                finally:
+                    add_progress(self, self._fraction)
 
         if error_count >= 1:
             raise RuntimeError('Encountered {} errors!'.format(error_count))
