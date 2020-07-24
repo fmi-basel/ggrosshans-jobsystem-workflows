@@ -1,4 +1,7 @@
 import os
+from glob import glob
+import shutil
+
 import luigi
 
 from faim_luigi.targets.image_target import TiffImageTarget
@@ -31,3 +34,22 @@ class StkToCompressedTifTask(BaseCompressionTask):
         '''
         img = input_target.load()
         output_target.save(img, compress=self.compression)
+
+    def preconvert(self):
+        '''
+        '''
+        def _get_dest(path):
+            return os.path.join(self.output_folder,
+                                os.path.basename(path) + '.backup')
+
+        ndfiles = glob(os.path.join(self.input_folder, '*nd'))
+
+        self.log_info('Found {} .nd files'.format(len(ndfiles)))
+
+        for source, dest in ((source, _get_dest(source))
+                             for source in ndfiles):
+            try:
+                shutil.copy(source, dest)
+            except Exception as err:
+                self.log_error('Could not copy {} to {}. Error: '.format(
+                    source, dest, err))

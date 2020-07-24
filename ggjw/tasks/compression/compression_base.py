@@ -36,6 +36,10 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
 
         '''
 
+    def preconvert(self):
+        '''point of extension for pre-conversion work.
+        '''
+
     def run(self):
         '''calls convert method on each input-output pair.
 
@@ -44,6 +48,10 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
         self._report_initial(iterable)
         self.log_info('Starting to convert {} images'.format(len(iterable)))
         error_count = 0
+
+        # potentially do some work before starting conversion. Like
+        # backing up some metadata.
+        self.preconvert()
 
         with ThreadPoolExecutor(max_workers=self.num_threads) as pool:
 
