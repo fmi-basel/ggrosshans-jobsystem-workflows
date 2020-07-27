@@ -44,7 +44,8 @@ class StkToCompressedTifTask(BaseCompressionTask):
 
         ndfiles = glob(os.path.join(self.input_folder, '*nd'))
 
-        self.log_info('Found {} .nd files'.format(len(ndfiles)))
+        self.log_info('Found {} .nd file{} to copy.'.format(
+            len(ndfiles), '' if len(ndfiles) == 1 else 's'))
 
         for source, dest in ((source, _get_dest(source))
                              for source in ndfiles):
