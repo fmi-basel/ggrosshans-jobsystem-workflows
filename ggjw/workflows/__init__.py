@@ -2,3 +2,5 @@ from .worm_segmentation import WormSegmentationFromBrightFieldWorkflow
 from .worm_segm_annotation import PrepareManuallySelectedImagesForAnnotationWorkflow
 from .worm_segm_annotation import PrepareRandomlySelectedImagesForAnnotationWorkflow
 from .worm_quantification import WormQuantificationWorkflow
+from .image_compression import StkToTifImageCompressionWorkflow
+
