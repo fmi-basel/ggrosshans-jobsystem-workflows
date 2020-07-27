@@ -67,7 +67,9 @@ def test_ndfile_backup(tmpdir, workflow):
     '''
     '''
     input_folder = TEST_DATA['img']
-    test_dir = tmpdir
+    # make target a subdir of tmpdir to check proper handling of
+    # folder creation.
+    test_dir = tmpdir / 'stuff'
 
     def _create_fake_file(folder, fname):
         path = os.path.join(folder, fname)
