@@ -52,5 +52,5 @@ class StkToCompressedTifTask(BaseCompressionTask):
                 os.makedirs(os.path.dirname(dest), exist_ok=True)
                 shutil.copy(source, dest)
             except Exception as err:
-                self.log_error('Could not copy {} to {}. Error: '.format(
+                self.log_error('Could not copy {} to {}. Error: {}'.format(
                     source, dest, err))
