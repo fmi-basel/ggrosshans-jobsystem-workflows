@@ -10,7 +10,14 @@ First, install the dependencies ```faim-luigi``` and ```dl-utils```. E.g. with
 pip install git+https://github.com/fmi-basel/dl-utils.git
 pip install git+https://github.com/fmi-basel/faim-luigi.git
 ```
-Then, install the actual workflow package:
+
+Then, 
+```
+git clone https://github.com/fmi-basel/ggrosshans-jobsystem-workflows.git
+cd ggrosshans-jobsystem-workflows/
+```
+
+install the actual workflow package:
 ```
 pip install -e .
 ./fetch_data_and_models.sh
