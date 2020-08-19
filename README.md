@@ -16,7 +16,7 @@ pip install -e .
 ./fetch_data_and_models.sh
 python -m pytest tests/
 ```
-Note that ./fetch_data_and_models.sh needs rsync and a mount to tungsten. If that is not available, please copy them manually (source and destinations can be found in the script).
+Note that ```./fetch_data_and_models.sh``` needs rsync and a mount to tungsten. If that is not available, please copy them manually (source and destinations can be found in the script).
 
 ### Notes
 
