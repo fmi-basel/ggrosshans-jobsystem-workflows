@@ -5,6 +5,7 @@ from itertools import product
 import pytest
 import luigi
 import numpy as np
+import tifffile
 
 from faim_luigi.targets.image_target import TiffImageTarget
 from ggjw.workflows.worm_segmentation import WormSegmentationFromBrightFieldWorkflow
@@ -27,6 +28,27 @@ def binary_intersection_over_union(first, second):
     '''
     return np.logical_and(
         first, second).sum() / (np.logical_or(first, second).sum() + 1.)
+
+
+def find_metadata(path):
+    '''helper to retrieve metadata from segmentation task written
+    into the output file.
+    '''
+    with tifffile.TiffFile(path) as fin:
+        return fin.pages[0].description
+
+
+def check_meta(path, model_version):
+    '''check if metadata contains key information.
+    '''
+    meta = find_metadata(path)
+
+    expected_task = 'RunBinarySegmentationModelPredictionTaskV0(' \
+                    if model_version == 'v0' \
+                    else 'RunBinarySegmentationModelPredictionTask('
+
+    assert expected_task in meta
+    assert model_version in meta
 
 
 @pytest.mark.parametrize('workflow,model_version',
@@ -67,6 +89,8 @@ def test_workflow(tmpdir, workflow, model_version):
         target = TiffImageTarget(
             os.path.join(str(test_dir), os.path.basename(reference.path)))
         assert target.exists()
+
+        check_meta(target.path, model_version)
 
         pred = target.load().squeeze()
         ref_segm = reference.load()
