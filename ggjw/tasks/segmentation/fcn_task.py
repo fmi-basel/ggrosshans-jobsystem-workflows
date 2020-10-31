@@ -2,14 +2,17 @@
 
 '''
 import os
+from functools import lru_cache
 
 import luigi
 from luigi.util import requires
-import numpy as np
-from tqdm import tqdm
-from skimage.measure import block_reduce
 
+import numpy as np
+import json
 import tensorflow as tf
+from tqdm import tqdm
+
+from skimage.measure import block_reduce
 
 from dlutils.prediction import predict_complete
 from dlutils.prediction.runner import runner
@@ -61,6 +64,21 @@ class BaseSegmentationModelPredictionTask(luigi.Task, LGRunnerLoggingMixin,
                 num_inputs, num_done))
 
         add_progress(self, num_done * self._fraction)
+
+    @property
+    @lru_cache(maxsize=1)
+    def _meta(self):
+        '''metadata that will be added to the ImageDescription
+        of the written segmentation.
+        '''
+        return str(self)
+
+    def _save(self, target, prediction):
+        '''saves the prediction at the given target location.
+        '''
+        target.save(prediction,
+                    compress=9,
+                    description=self._meta)
 
     def output(self):
         '''
@@ -130,7 +148,7 @@ class RunBinarySegmentationModelPredictionTask(
 
             # save
             try:
-                target.save(prediction.numpy(), compress=9)
+                self._save(target, prediction.numpy())
             except Exception as err:
                 self.log_error('Could not save target. Error: {}'.format(err))
 
@@ -233,7 +251,7 @@ class RunBinarySegmentationModelPredictionTaskV0(
             '''
             '''
             try:
-                target.save(prediction)
+                self._save(target, prediction)
             except Exception as err:
                 self.log_error('Could not save target {}. Error: {}'.format(
                     target.path, err))
