@@ -10,7 +10,6 @@ from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictio
 from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
 from ggjw.workflows.base import JobSystemWorkflow
 
-
 MODEL_FOLDER_FOR_VERSION = {
     version: os.path.join(MODEL_BASE_FOLDER, 'segmentation', 'worms_from_bf',
                           version)
@@ -49,93 +48,42 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
 
     '''
 
-    auto_rescale = luigi.BoolParameter(default=False)
-    '''If set to True, rescale intensities for each image independently.
-    Otherwise, the intensities are expected to be similar to the training
-    data.
-
-    '''
-
     output_folder = luigi.Parameter()
     '''output folder into which the segmentations will be written.
 
     '''
 
-    model_folder = os.path.join(MODEL_BASE_FOLDER, 'segmentation',
-                                'worms_from_bf', 'v0')
-    '''path of saved model.
-
-    '''
-    model_weights_fname = 'model_latest.h5'
-    '''file name of model weights.
+    {"default": "v2", "choices": ["v0", "v1", "v2"]}
+    model_version = luigi.ChoiceParameter(choices=["v0", "v1", "v2"],
+                                          default="v2")
+    '''Choose the segmentation model version. It is strongly recommended
+    to use the most recent version.
 
     '''
 
     task_namespace = 'ggrosshans'
     resources = {'gpu': 1}
 
-    def requires(self):
-        '''launch the actual segmentation task.
+    @property
+    def model_folder(self):
+        '''path of saved model.
         '''
-        yield RunBinarySegmentationModelPredictionTaskV0(
-            input_folder=self.input_folder,
-            file_pattern=self.file_pattern,
-            output_folder=self.output_folder,
-            model_folder=self.model_folder,
-            auto_rescale=self.auto_rescale,
-            model_weights_fname=self.model_weights_fname)
-
-
-class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
-                                              JobSystemWorkflow):
-    '''worm segmentation with a CNN from brightfield image stacks.
-
-    NOTE input is expected to be 3-dim, the first axis is then projected
-    and the output is a 2-dim segmentation.
-
-    '''
-    input_folder = luigi.Parameter()
-    '''base folder containing the images to be processed.
-
-    '''
-
-    file_pattern = luigi.Parameter()
-    '''file name pattern that matches all images that need to be
-    processed.
-
-    All files that match:
-
-      input_folder +input_pattern
-
-    will be processed.
-
-    Example
-    -------
-
-    '*DIC-GFP3*.stk' will match all images containing DIC-GFP3, while
-    excluding all others.
-
-    '''
-
-    output_folder = luigi.Parameter()
-    '''output folder into which the segmentations will be written.
-
-    '''
-
-    model_folder = os.path.join(MODEL_BASE_FOLDER, 'segmentation',
-                                'worms_from_bf', 'v1')
-    '''path of saved model.
-
-    '''
-
-    task_namespace = 'ggrosshans'
-    resources = {'gpu': 1}
+        return MODEL_FOLDER_FOR_VERSION[self.model_version]
 
     def requires(self):
         '''launch the actual segmentation task.
         '''
-        yield RunBinarySegmentationModelPredictionTask(
-            input_folder=self.input_folder,
-            file_pattern=self.file_pattern,
-            output_folder=self.output_folder,
-            model_folder=self.model_folder)
+        if self.model_version == 'v0':
+            model_weights_fname = 'model_latest.h5'
+            yield RunBinarySegmentationModelPredictionTaskV0(
+                input_folder=self.input_folder,
+                file_pattern=self.file_pattern,
+                output_folder=self.output_folder,
+                model_folder=self.model_folder,
+                model_weights_fname=model_weights_fname)
+        else:
+            yield RunBinarySegmentationModelPredictionTask(
+                input_folder=self.input_folder,
+                file_pattern=self.file_pattern,
+                output_folder=self.output_folder,
+                model_folder=self.model_folder)
