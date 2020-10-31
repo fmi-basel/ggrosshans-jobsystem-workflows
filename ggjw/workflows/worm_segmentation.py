@@ -10,8 +10,12 @@ from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictio
 from ggjw.tasks.segmentation.fcn_task import RunBinarySegmentationModelPredictionTask
 from ggjw.workflows.base import JobSystemWorkflow
 
-# basic lookup of model folder. Should be delegated in the future.
-# TODO Deploy experimental workflow and depreciate current.
+
+MODEL_FOLDER_FOR_VERSION = {
+    version: os.path.join(MODEL_BASE_FOLDER, 'segmentation', 'worms_from_bf',
+                          version)
+    for version in ['v0', 'v1', 'v2']  # Currently supported versions
+}
 
 
 class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
@@ -82,8 +86,8 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
             model_weights_fname=self.model_weights_fname)
 
 
-class ExperimentalWormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
-                                                          JobSystemWorkflow):
+class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
+                                              JobSystemWorkflow):
     '''worm segmentation with a CNN from brightfield image stacks.
 
     NOTE input is expected to be 3-dim, the first axis is then projected
