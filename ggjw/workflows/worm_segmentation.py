@@ -62,6 +62,16 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
 
     It is strongly recommended to use the most recent version.
 
+    Model versions:
+    ---
+    v2 => Current release. Trained on data from v1 extended with
+          additional early timepoints.
+    v1 => Trained on data from Yannick, Milou and Lucas.
+          (previously ExperimentalWormSegmentationFromBrightFieldWorkflow).
+    v0 => Trained only on Yannick's GFP-based segmentation.
+
+    Output probabilities:
+    ---
     The outputs are probabilities from the segmentation model scaled
     to the range of [0, 255], where 255 corresponds to a probability
     of 1. You can obtain a hard segmentation, e.g. by applying a
