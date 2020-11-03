@@ -35,6 +35,14 @@ class WormQuantificationWorkflow(luigi.WrapperTask, JobSystemWorkflow):
 
     '''
 
+    {"default": 127.0}
+    threshold = luigi.FloatParameter(default=127.0)
+    '''threshold to be applied on the segmentation probabilities. Higher
+    values lead to more conservative segmentations. The threshold has
+    to be within [0, 255].
+
+    '''
+
     task_namespace = 'ggrosshans'
     resources = {'gpu': 0}
 
@@ -45,4 +53,5 @@ class WormQuantificationWorkflow(luigi.WrapperTask, JobSystemWorkflow):
             image_folder=self.image_folder,
             segm_folder=self.segm_folder,
             output_folder=self.output_folder,
-            image_file_pattern=self.image_file_pattern)
+            image_file_pattern=self.image_file_pattern,
+            threshold=self.threshold)
