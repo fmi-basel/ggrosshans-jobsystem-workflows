@@ -7,7 +7,7 @@ import tifffile
 
 from faim_luigi.targets.image_target import TiffImageTarget
 
-from .compression_base import BaseCompressionTask
+from .compression_base import BaseCompressionTask, ConversionException
 
 
 def load_stk_with_basic_meta(path):
@@ -24,14 +24,16 @@ def stk_meta_to_ijtiff_meta(stk_metadata):
     to write it to an imagej compatible tiff.
     '''
     meta = {
-        'imagej':
-        True,
-        'resolution':
-        tuple(1. / stk_metadata.get(ax + 'Calibration') for ax in 'XY'),
-        'metadata': {
-            'unit': 'um'
-        }
+        'imagej': True,
     }
+
+    try:
+        calibration_meta = tuple(
+            stk_metadata.get(ax + 'Calibration') for ax in 'XY')
+        meta['resolution'] = tuple(1. / cal for cal in calibration_meta)
+        meta['metadata'] = {'unit': 'um'}
+    except Exception:
+        pass
 
     try:
         zdist = stk_metadata['ZDistance'][0]
@@ -65,11 +67,19 @@ class StkToCompressedTifTask(BaseCompressionTask):
     def convert(self, input_target, output_target):
         '''writes tif
         '''
-        img, meta = load_stk_with_basic_meta(input_target.path)
-        if not meta:
-            self.log_warning('Could not read pixel spacing for {}'.format(
-                input_target.path))
-        output_target.save(img, compress=self.compression, **meta)
+        try:
+            img, meta = load_stk_with_basic_meta(input_target.path)
+            if not meta or meta.get('resolution', None) is None:
+                self.log_warning('Could not read pixel spacing for {}'.format(
+                    input_target.path))
+
+            output_target.save(img, compress=self.compression, **meta)
+        except Exception as err:
+            # Re-raise an error here to provide more information about
+            # which file caused the error.
+            raise ConversionException(
+                'Compression of {} failed. Error: {}'.format(
+                    input_target.path, err))
 
     def preconvert(self):
         '''
