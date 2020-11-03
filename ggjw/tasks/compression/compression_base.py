@@ -13,6 +13,9 @@ from faim_luigi.tasks.collectors import ImageCollectorTask
 from ggjw.tasks.logging import LGRunnerLoggingMixin, add_progress
 from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
 
+class ConversionException(Exception):
+    pass
+
 
 @requires(ImageCollectorTask)
 class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
@@ -69,6 +72,8 @@ class BaseCompressionTask(luigi.Task, LGRunnerLoggingMixin,
 
                 try:
                     future.result()
+                except ConversionException as err:
+                    self.log_error(str(err))
                 except Exception as err:
                     self.log_error(
                         'Failed to convert an item. Error: {}'.format(err))
