@@ -35,7 +35,7 @@ class WormQuantificationWorkflow(luigi.WrapperTask, JobSystemWorkflow):
 
     '''
 
-    {"default": 127.0}
+    {"default": "127"}
     threshold = luigi.FloatParameter(default=127.0)
     '''threshold to be applied on the segmentation probabilities. Higher
     values lead to more conservative segmentations. The threshold has
