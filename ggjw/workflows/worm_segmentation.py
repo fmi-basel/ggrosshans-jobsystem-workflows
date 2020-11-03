@@ -21,8 +21,26 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
                                               JobSystemWorkflow):
     '''worm segmentation with a CNN from brightfield image stacks.
 
-    NOTE input is expected to be 3-dim, the first axis is then projected
+    NOTES
+    -----
+    The input is expected to be 3-dim. The first axis is then projected
     and the output is a 2-dim segmentation.
+
+    The outputs are probabilities from the segmentation model scaled
+    to the range of [0, 255], where 255 corresponds to a probability
+    of 1. You can obtain a hard segmentation, e.g. by applying a
+    simple threshold.
+
+    Be aware that the different models may be very differently
+    calibrated, depending on the training data they have seen. This
+    means that the range of probabilities they output may differ,
+    e.g. being skewed or tending to be more/less extreme. Therefore,
+    it is recommended to check if the threshold in the subsequent
+    analysis is appropriate and adjust if necessary whenever you used
+    a different segmentation model (see model_version parameter).
+
+    The resulting segmentation files contain a metadata entry on the
+    model_version that was used to generate them.
 
     '''
     input_folder = luigi.Parameter()
@@ -58,6 +76,12 @@ class WormSegmentationFromBrightFieldWorkflow(luigi.WrapperTask,
                                           default="v2")
     '''Choose the segmentation model version. It is strongly recommended
     to use the most recent version.
+
+    Note that the different model versions can have different
+    probability calibration, which may make it necessary to adjust the
+    subsequent threshold. A good initial guess is to use a threshold
+    of P=0.5, which would correspond to a scaled threshold value of
+    127.
 
     '''
 
