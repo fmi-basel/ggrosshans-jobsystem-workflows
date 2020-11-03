@@ -31,6 +31,13 @@ class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin,
     segm_folder = luigi.Parameter()
     output_folder = luigi.Parameter()
 
+    threshold = luigi.FloatParameter(default=127.0)
+    '''threshold to be applied on the segmentation probabilities. Higher
+    values lead to more conservative segmentations. The threshold has
+    to be within [0, 255].
+
+    '''
+
     image_file_pattern = luigi.Parameter()
     '''fname pattern matching images of the channel that should
     be quantified. E.g. "*w1*" for all images with w1 in the filename.
@@ -71,6 +78,8 @@ class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin,
                 ('output_path_csv', self.output_path_csv),
                 ('output_path_table', self.output_path_table)
             ]
+        ] + [
+            format_workflow_variable_arg('threshold', self.threshold, 'double')
         ]
 
     def run(self):
