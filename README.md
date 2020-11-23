@@ -50,6 +50,19 @@ patch_overlap=64
 Make sure to choose the ```patch_overlap``` appropriately such that
 there are no/minimal stitching artifacts.
 
+### Remarks on the Knime-based WormQuantificationWorkflow
+
+Make sure the knime executable is found, either through ```knime``` or 
+by setting the path in the config appropriately, e.g.:
+
+```
+[WormQuantificationTask]
+knime_executable=/tungstenfs/nobackup/ggrossha/svcgrossha/knime_4.1.3/knime
+```
+
+To avoid potential JVM heap space errors (```Execute failed: Java heap space```),
+consider increasing it through ```-Xmx32g``` (=> sets it to 32G) in ```knime.ini```. 
+
 
 ## Troubleshooting
 
@@ -70,6 +83,7 @@ Allow Tensorflow to "grow" the model on the GPU:
 ```
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 ```
+
 
 
 
