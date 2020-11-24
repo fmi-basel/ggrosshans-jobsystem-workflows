@@ -19,7 +19,8 @@ TEST_DATA_EXISTS = all(os.path.exists(path) for path in TEST_DATA.values())
 # TODO consider adding check for knime availability
 @pytest.mark.skipif(not TEST_DATA_EXISTS,
                     reason='Test data for quantification not available.')
-def test_quant_workflow(tmpdir):
+@pytest.mark.parametrize('image_file_pattern', ['*w1*', '*w1*.stk'])
+def test_quant_workflow(tmpdir, image_file_pattern):
     '''test the workflow for worm segmentation from BrightField image stacks
     on a few test images.
 
@@ -31,7 +32,7 @@ def test_quant_workflow(tmpdir):
         WormQuantificationWorkflow(output_folder=str(test_dir),
                                    image_folder=TEST_DATA['img'],
                                    segm_folder=TEST_DATA['segm'],
-                                   image_file_pattern='*w1*',
+                                   image_file_pattern=image_file_pattern,
                                    threshold=127.0)
     ],
                          local_scheduler=True,
