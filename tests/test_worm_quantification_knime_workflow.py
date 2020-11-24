@@ -1,10 +1,12 @@
 import os
+from queue import Queue
 
 import luigi
 import pytest
 import pandas
 
 from ggjw.workflows.worm_quantification import WormQuantificationWorkflow
+from ggjw.tasks.quantification.knime_quantification import WormQuantificationTask
 
 # Test data for workflow
 TEST_DATA = {
@@ -15,8 +17,21 @@ TEST_DATA = {
 
 TEST_DATA_EXISTS = all(os.path.exists(path) for path in TEST_DATA.values())
 
+# Queue to communicate exceptions from the worker to the main thread.
+FAILQUEUE = Queue()
+
+
+@WormQuantificationTask.event_handler(luigi.Event.FAILURE)
+def fail(task, exception):
+    '''pushes exceptions from the WormQuantificationTask to the
+    FAILQUEUE for further examination.
+    '''
+    FAILQUEUE.put((task, exception))
+
 
 def assert_quant_output_exists(output_folder):
+    '''check existance of quantification outputs
+    '''
     assert (output_folder / 'kymograph_stats.csv').exists()
     assert (output_folder / 'kymograph_stats.table').exists()
     assert (output_folder / 'knime-workflow.log').exists()
@@ -98,3 +113,109 @@ def test_quant_workflow_filtered(tmpdir, image_file_pattern):
     # check the content of the table.
     result_data = pandas.read_csv(test_dir / 'kymograph_stats.csv')
     assert len(result_data) == 1  # expected number of timepoints
+
+
+@pytest.mark.parametrize('which', ['image', 'segm', 'both'])
+def test_error_nonexisting_folder(tmpdir, which):
+    '''test if the workflow raises an error if the input folders dont exist.
+    '''
+    assert FAILQUEUE.empty()
+
+    test_dir = str(tmpdir / 'quant')
+    image_folder = (str(tmpdir / 'gugus') if which == 'image'
+                    or which == 'both' else TEST_DATA['img'])
+    segm_folder = (str(tmpdir / 'nonsense') if which == 'segm'
+                   or which == 'both' else TEST_DATA['segm'])
+
+    result = luigi.build([
+        WormQuantificationWorkflow(output_folder=test_dir,
+                                   image_folder=image_folder,
+                                   segm_folder=segm_folder,
+                                   image_file_pattern='*',
+                                   threshold=127.0)
+    ],
+                         local_scheduler=True,
+                         detailed_summary=True)
+
+    assert result.status == luigi.execution_summary.LuigiStatusCode.FAILED
+    task, exception = FAILQUEUE.get_nowait()
+    assert isinstance(task, WormQuantificationTask)
+    assert isinstance(exception, FileNotFoundError)
+
+
+def test_error_no_files(tmpdir):
+    '''test if the workflow raises an error if threshold is out of bounds.
+    '''
+    assert FAILQUEUE.empty()
+
+    test_dir = str(tmpdir / 'quant')
+    image_folder = TEST_DATA['img']
+    segm_folder = TEST_DATA['segm']
+
+    result = luigi.build([
+        WormQuantificationWorkflow(output_folder=test_dir,
+                                   image_folder=image_folder,
+                                   segm_folder=segm_folder,
+                                   image_file_pattern='*doesnt*match*any',
+                                   threshold=127.0)
+    ],
+                         local_scheduler=True,
+                         detailed_summary=True)
+
+    assert result.status == luigi.execution_summary.LuigiStatusCode.FAILED
+    task, exception = FAILQUEUE.get_nowait()
+    assert isinstance(task, WormQuantificationTask)
+    assert isinstance(exception, FileNotFoundError)
+
+
+def test_error_no_matches(tmpdir):
+    '''test if the workflow raises an error if threshold is out of bounds.
+    '''
+    assert FAILQUEUE.empty()
+
+    test_dir = str(tmpdir / 'quant')
+    image_folder = TEST_DATA['img']
+    segm_folder = tmpdir / 'empty-segm'
+    segm_folder.mkdir()
+
+    result = luigi.build([
+        WormQuantificationWorkflow(output_folder=test_dir,
+                                   image_folder=image_folder,
+                                   segm_folder=segm_folder,
+                                   image_file_pattern='*',
+                                   threshold=127.0)
+    ],
+                         local_scheduler=True,
+                         detailed_summary=True)
+
+    assert result.status == luigi.execution_summary.LuigiStatusCode.FAILED
+    task, exception = FAILQUEUE.get_nowait()
+    assert isinstance(task, WormQuantificationTask)
+    assert isinstance(exception, FileNotFoundError)
+
+
+@pytest.mark.parametrize('threshold', [-1, 256])
+def test_error_threshold_oob(tmpdir, threshold):
+    '''test if the workflow raises an error if threshold is out of bounds.
+    '''
+    assert FAILQUEUE.empty()
+
+    test_dir = str(tmpdir / 'quant')
+    image_folder = TEST_DATA['img']
+    segm_folder = TEST_DATA['segm']
+
+    result = luigi.build([
+        WormQuantificationWorkflow(output_folder=test_dir,
+                                   image_folder=image_folder,
+                                   segm_folder=segm_folder,
+                                   image_file_pattern='*',
+                                   threshold=threshold)
+    ],
+                         local_scheduler=True,
+                         detailed_summary=True)
+
+    assert result.status == luigi.execution_summary.LuigiStatusCode.FAILED
+    task, exception = FAILQUEUE.get_nowait()
+    assert isinstance(task, WormQuantificationTask)
+    assert isinstance(exception, ValueError)
+    assert 'threshold' in str(exception).lower()
