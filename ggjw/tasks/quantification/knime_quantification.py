@@ -125,7 +125,7 @@ class WormQuantificationTask(KnimeWrapperTaskBase, LGRunnerLoggingMixin,
             image_candidates = set(
                 filter(is_not_none, map(extract_pos_time_fn, image_paths)))
 
-            return len(image_candidates.union(segm_candidates))
+            return len(image_candidates.intersection(segm_candidates))
 
         # check if some image files match
         image_matches = glob(
