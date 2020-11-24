@@ -181,7 +181,7 @@ def test_error_no_matches(tmpdir):
     result = luigi.build([
         WormQuantificationWorkflow(output_folder=test_dir,
                                    image_folder=image_folder,
-                                   segm_folder=segm_folder,
+                                   segm_folder=str(segm_folder),
                                    image_file_pattern='*',
                                    threshold=127.0)
     ],
