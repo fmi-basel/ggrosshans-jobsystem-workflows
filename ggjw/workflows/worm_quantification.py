@@ -30,9 +30,6 @@ class WormQuantificationWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''fname pattern matching images of the channel that should
     be quantified. E.g. "*w1*" for all images with w1 in the filename.
 
-    NOTE the underlying KNIME workflow seems to have problems with "_"
-    in the file pattern. These should be avoided.
-
     '''
 
     {"default": "127"}
