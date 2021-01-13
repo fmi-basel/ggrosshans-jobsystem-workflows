@@ -64,6 +64,35 @@ To avoid potential JVM heap space errors (```Execute failed: Java heap space```)
 consider increasing it through ```-Xmx32g``` (=> sets it to 32G) in ```knime.ini```. 
 
 
+### How do I run a workflow/task from the command line?
+
+You can run any task or workflow from the command line using luigi. 
+
+For example, to run the ```StkToTifImageCompressionWorkflow```
+
+```
+luigi --module ggjw.workflows ggrosshans.StkToTifImageCompressionWorkflow \
+  --input-folder /tungstenfs/scratch/ggrossha/Lucas/Live_Imaging/201030_Maike_phat4_scl3 \
+  --output-folder /tungstenfs/nobackup/ggrossha/grafmaik/Phat4_Scl3_reporter_Test_Johnson/ \
+  --file-pattern "*stk" \
+  --local-scheduler
+```
+  
+or as an example for running a task:
+
+```
+luigi  --module ggjw.tasks.segmentation.fcn_task RunBinarySegmentationModelPredictionTask \
+  --input-folder /tungstenfs/scratch/ggrossha/Marit/HBL1-GFP/20201002_Test5_Johnson \
+  --file-pattern "*w2Marit-BF-488-Cam1_*.stk" \
+  --output-folder /tungstenfs/scratch/ggrossha/svcgrossha/tmp/segm-test-gpu/ \
+  --model-folder ggjw/models/segmentation/worms_from_bf/v2-beta-gpu/ \
+  --local-scheduler
+```
+
+(Note that the ```\``` are just to split the command over multiple lines. The whole command could also be passed as one line without the ```\```.)
+
+See also:  [Running luigi](https://luigi.readthedocs.io/en/stable/running_luigi.html#running-from-the-command-line)
+
 ## Troubleshooting
 
 ### Out of memory error (OOM) with segmentation models running on GPU
