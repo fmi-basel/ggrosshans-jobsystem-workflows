@@ -93,6 +93,17 @@ luigi  --module ggjw.tasks.segmentation.fcn_task RunBinarySegmentationModelPredi
 
 See also:  [Running luigi](https://luigi.readthedocs.io/en/stable/running_luigi.html#running-from-the-command-line)
 
+### We have trained and validated a new model version for the ```WormSegmentationFromBrightFieldWorkflow```. How do we release it in the jobsystem?
+
+1. Make sure you have deployed the model including the necessary preprocessing (e.g. ```ManualModelDeploymentTask``` or ```DeployAndTestModelTask``` from [faim-worm-segmentation](https://github.com/fmi-basel/faim-worm-segmentation).
+2. Stage the model with the previous versions, giving it a subfolder of incremented value, e.g. ```v3```. (See ```fetch_data_and_models.sh``` for the local staging area).
+3. In [ggjw.workflows.worm_segmentation](https://github.com/fmi-basel/ggrosshans-jobsystem-workflows/blob/master/ggjw/workflows/worm_segmentation.py):
+   - Add the new version to ```MODEL_FOLDER_FOR_VERSION```
+   - Add the new version to the ```WormSegmentationFromBrightFieldWorkflow```.```model_version``` choice parameter and consider making it default. Note that this has to be explicit (i.e. you **cannot** use something like ```list(MODEL_FOLDER_FOR_VERSION.keys())```). Otherwise, the parameter parsing from the minimal-job-system will not work.
+   - Add description of new version to ```WormSegmentationFromBrightFieldWorkflow```.```model_version```'s docstring.
+4. Install new version on the host machine and make sure all tests (including the test of the new model) pass.
+5. In the admin portal of the minimal-job-system, synchronize jobs again to update the parameters of the workflow. After that, you should be able to select the new model for ```WormSegmentationFromBrightFieldWorkflow``` and run it.
+
 ## Troubleshooting
 
 ### Out of memory error (OOM) with segmentation models running on GPU
