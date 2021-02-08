@@ -43,3 +43,8 @@ var/
 .Spotlight-V100
 .Trashes
 __MACOSX/
+
+
+# test data and models
+tests/data/
+ggjw/models/segmentation/
