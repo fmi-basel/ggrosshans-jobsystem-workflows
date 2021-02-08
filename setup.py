@@ -16,7 +16,7 @@ setup(
     ]),
     include_package_data=True,
     install_requires=[
-        'luigi',
+        'luigi>=2.8',
         'pytest',
         'pandas',
         'scikit-image>=0.16,<0.17',
