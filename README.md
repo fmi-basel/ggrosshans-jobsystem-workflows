@@ -124,6 +124,27 @@ Allow Tensorflow to "grow" the model on the GPU:
 export TF_FORCE_GPU_ALLOW_GROWTH=true
 ```
 
+## FAQ
+
+### Is there anything I should do regarding code style/conventions before creating a pull request?
+
+It's recommended to run ```pylint``` on your new code to see if there's any errors. Use common sense to judge whether the warning is important or not.
+
+```
+python -m pylint ggjw/something_new.py
+```
+(you might need to do ```pip install pylint``` if you're using it the first time).
+
+Also, please reformat the new code with ```yapf```:
+
+```
+python -m yapf -i ggjw/something_new.py
+```
+(you might need to do ```pip install yapf``` if you're using it the first time). Under some circumstances the auto-format doesn't yield a great outcome (e.g. when there's a lot of raw np.ndarrays manually defined for a unit test). In that case, you can use the ```# yapf: disable``` and ```# yapf: enable``` to protect the block. Use this sparingly.
+
+### Do I really have to write a test for my new workflow?
+
+Yes. You can use the existing ```tests/``` as a guide.
 
 
 
