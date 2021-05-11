@@ -32,6 +32,7 @@ class StkToTifImageCompressionWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''Output folder to write compressed stacks.
     '''
 
+    {"default": "1"}
     binning = luigi.IntParameter(default=1)
     '''Downsampling factor.
     '''
