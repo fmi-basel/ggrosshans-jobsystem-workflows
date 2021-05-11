@@ -5,6 +5,8 @@ import shutil
 import luigi
 import tifffile
 
+from skimage.transform import downscale_local_mean
+
 from faim_luigi.targets.image_target import TiffImageTarget
 
 from .compression_base import BaseCompressionTask, ConversionException
@@ -55,6 +57,10 @@ class StkToCompressedTifTask(BaseCompressionTask):
 
     '''
 
+    binning = luigi.IntParameter(default=1)
+    '''downsampling factor.
+    '''
+
     compression = ('deflate', 9)  # tifffile specific.
 
     def get_target(self, input_handle):
@@ -69,9 +75,18 @@ class StkToCompressedTifTask(BaseCompressionTask):
         '''
         try:
             img, meta = load_stk_with_basic_meta(input_target.path)
+            self.log_info('Metadata: ' + str(meta))
+            self.log_info(str(img.shape))
+            if self.binning > 1:
+                img = downscale_local_mean(
+                    img, (1, self.binning, self.binning)).astype(img.dtype)
             if not meta or meta.get('resolution', None) is None:
                 self.log_warning('Could not read pixel spacing for {}'.format(
                     input_target.path))
+            else:
+                if self.binning > 1:
+                    meta['resolution'] = tuple(res / self.binning
+                                               for res in meta['resolution'])
 
             output_target.save(img, compress=self.compression, **meta)
         except Exception as err:

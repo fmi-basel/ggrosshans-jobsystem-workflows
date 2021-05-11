@@ -64,6 +64,51 @@ def test_compression_task(tmpdir, workflow):
 
 @pytest.mark.parametrize(
     'workflow', [StkToCompressedTifTask, StkToTifImageCompressionWorkflow])
+def test_compression_task_with_binning(tmpdir, workflow):
+    '''
+    '''
+    input_folder = TEST_DATA['img']
+    test_dir = tmpdir
+
+    result = luigi.build([
+        workflow(output_folder=str(test_dir),
+                 input_folder=input_folder,
+                 binning=2,
+                 file_pattern='*.stk')
+    ],
+                         local_scheduler=True,
+                         detailed_summary=True)
+
+    if result.status not in [
+            luigi.execution_summary.LuigiStatusCode.SUCCESS,
+            luigi.execution_summary.LuigiStatusCode.SUCCESS_WITH_RETRY
+    ]:
+        raise RuntimeError(
+            'Luigi failed to run the workflow! Exit code: {}'.format(result))
+
+    references = [
+        TiffImageTarget(path)
+        for path in sorted(glob(os.path.join(TEST_DATA['img'], '*stk')))
+    ]
+    compressed = [
+        TiffImageTarget(path)
+        for path in sorted(glob(os.path.join(str(test_dir), '*tif')))
+    ]
+
+    assert len(references) >= 1
+    assert len(references) == len(compressed)
+
+    for ref, compr in zip(references, compressed):
+        ref = ref.load()
+        assert ref.ndim == 3
+        compr = compr.load()
+        # assert binned dimensions
+        assert ref.shape == tuple(b * d
+                                  for b, d in zip((1, 2, 2), compr.shape))
+
+
+@pytest.mark.parametrize(
+    'workflow', [StkToCompressedTifTask, StkToTifImageCompressionWorkflow])
 def test_ndfile_backup(tmpdir, workflow):
     '''
     '''
@@ -102,7 +147,8 @@ def test_ndfile_backup(tmpdir, workflow):
 
 @pytest.mark.parametrize(
     'workflow', [StkToCompressedTifTask, StkToTifImageCompressionWorkflow])
-def test_pixel_spacing_meta(tmpdir, workflow):
+@pytest.mark.parametrize('binning', [1, 2])
+def test_pixel_spacing_meta(tmpdir, workflow, binning):
     '''check if spacing is correctly propagated.
     '''
     input_folder = TEST_DATA['img']
@@ -118,6 +164,7 @@ def test_pixel_spacing_meta(tmpdir, workflow):
         [
             workflow(output_folder=str(test_dir),
                      input_folder=input_folder,
+                     binning=binning,
                      file_pattern=file_pattern)  # only one file is enough.
         ],
         local_scheduler=True,
@@ -153,5 +200,5 @@ def test_pixel_spacing_meta(tmpdir, workflow):
     comp_res = get_resolution(compressed[0].path)
     ref_res = get_resolution(reference.path)
 
-    assert all(lhs == pytest.approx(rhs, abs=1e-4)
+    assert all(lhs == pytest.approx(binning * rhs, abs=1e-4)
                for lhs, rhs in zip(comp_res, ref_res))
