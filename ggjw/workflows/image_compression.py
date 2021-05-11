@@ -14,8 +14,7 @@ from ggjw.tasks.compression.compression_simple import StkToCompressedTifTask
 # of just using inheritance.
 
 
-class StkToTifImageCompressionWorkflow(
-        luigi.WrapperTask, JobSystemWorkflow):
+class StkToTifImageCompressionWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''Prepare images for annotation by random sampling from
     the given experiment.
     '''
@@ -33,12 +32,16 @@ class StkToTifImageCompressionWorkflow(
     '''Output folder to write compressed stacks.
     '''
 
+    binning = luigi.IntParameter(default=1)
+    '''Downsampling factor.
+    '''
+
     task_namespace = 'ggrosshans'
 
     def requires(self):
         '''launch the actual worker tasks.
         '''
-        yield StkToCompressedTifTask(
-            input_folder=self.input_folder,
-            output_folder=self.output_folder,
-            file_pattern=self.file_pattern)
+        yield StkToCompressedTifTask(input_folder=self.input_folder,
+                                     output_folder=self.output_folder,
+                                     binning=self.binning,
+                                     file_pattern=self.file_pattern)
