@@ -81,8 +81,9 @@ class StkToCompressedTifTask(BaseCompressionTask):
                 img = downscale_local_mean(
                     img, (1, self.binning, self.binning)).astype(img.dtype)
             if not meta or meta.get('resolution', None) is None:
-                self.log_warning('Could not read pixel spacing for {}'.format(
-                    input_target.path))
+                #self.log_warning('Could not read pixel spacing for {}'.format(
+                #    input_target.path))
+                pass
             else:
                 if self.binning > 1:
                     meta['resolution'] = tuple(res / self.binning
