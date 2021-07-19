@@ -21,7 +21,9 @@ class DeleteFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
 
     '''
     csv_document = luigi.Parameter()
-    '''folder and file where the goodworms file is located
+    '''folder and csv file that tells which worms and which 
+    timepoints should be deleted. Structure of the file should 
+    have headings: "Position", "Quality", "Hatch", "Escape"
 
     '''
 

@@ -66,7 +66,7 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin):
 
             self.log_info("running image position {a} from total of {b} positions".format(a=str(position),b=len(Unique_positions)))
 
-            add_progress(position / len(Unique_positions)*100)
+            add_progress(self,position / len(Unique_positions)*100)
             #print("pos "+ str(position))
 
             #make a list which images to stack
@@ -86,24 +86,23 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin):
             
             # write to tiff
             os.makedirs(self.output_folder+'/temp', exist_ok=True)
-            img_name=self.output_folder+'temp/s'+str(position)+".tiff"
+            img_name=self.output_folder+'/temp/s'+str(position)+".tiff"
             imwrite(img_name, image_to_save,imagej=True)
 
             # with self.output().open('w') as fout:
             #     df.to_csv(fout, index=False)
 
-            self.log_info("Quantification is completed")
+            self.log_info("stacking files is completed")
 
 
     def output(self):
-        return luigi.LocalTarget(
-                os.path.join(self.output_folder, self.img_name))
+        return luigi.LocalTarget(self.output_folder+'/temp')
 
 
 ## added to run the code from here
 if __name__ == '__main__':
     luigi.build([
-        StackFileTask(
+        StackFilesTask(
             image_folder = '/Users/Marit/Documents/Test_folder',  # where the images are
             image_file_pattern = '*w1Marit-488-BF-Cam0*.stk',  #which channel is the channel for quantification?
             data_format = 'st', 

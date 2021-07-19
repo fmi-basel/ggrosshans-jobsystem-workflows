@@ -47,7 +47,9 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin):
 
         #merges annotation file and image folder list
         filelist=filelist.merge(CSV_annotation,on=['Position'],how='inner') #merges two datasets
-        filelist.to_csv(csv_dir+"/detected_files.csv")
+
+
+        filelist.to_csv(self.image_folder +"/original_files.csv")
 
         #reduces the filelist to only the files that need to be deleted
         files_to_delete1=filelist[filelist['Quality']==0] #selects only worms where quality is 0
@@ -57,7 +59,8 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin):
 
         #merges the files to delete
         files_to_delete=pd.concat([files_to_delete1,files_to_delete2])
-        files_to_delete.to_csv(csv_dir+"/deleted_files.csv")
+        
+        files_to_delete.to_csv(self.image_folder+"/deleted_files.csv")
 
         # info's
         self.log_info(
@@ -70,9 +73,24 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin):
             #print(files_to_delete["File"].iloc[i])
             os.remove(files_to_delete["File"].iloc[i])
 
-        self.log_info("done")
 
-    #   No def output(self):??
+        self.log_info("Quantification is completed")
+    
+
+    def output(self):
+        return luigi.LocalTarget(
+            os.path.join(self.image_folder, 'deleted_files.csv'))
+
+if __name__ == '__main__':
+    luigi.build([
+        DeleteFilesTask(
+            image_folder = '/Users/Marit/Documents/Test_folder',  # where the images are
+            csv_document='/Users/Marit/Documents/output/GoodWorms.csv',
+            image_file_pattern = '*.stk',  #which channel is the channel for quantification?
+            data_format = 'st')
+    ],
+                local_scheduler=True)
+
 
 
 
