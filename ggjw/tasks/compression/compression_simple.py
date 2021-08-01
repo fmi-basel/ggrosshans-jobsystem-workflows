@@ -75,8 +75,8 @@ class StkToCompressedTifTask(BaseCompressionTask):
         '''
         try:
             img, meta = load_stk_with_basic_meta(input_target.path)
-            self.log_info('Metadata: ' + str(meta))
-            self.log_info(str(img.shape))
+            #self.log_info('Metadata: ' + str(meta))
+            #self.log_info(str(img.shape))
             if self.binning > 1:
                 img = downscale_local_mean(
                     img, (1, self.binning, self.binning)).astype(img.dtype)
