@@ -15,11 +15,12 @@ class DeleteFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     '''folder containing the images to be processed.
 
     '''
-    data_format = luigi.Parameter()
-    '''folder containing the segmentation corresponding to
-    the images in image_folder.
+    {"default": "st", "choises": ["st", "ts"]}
+    data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
+    '''order of time and position in files: 's_t_' or 't_s_'.
 
     '''
+
     csv_document = luigi.Parameter()
     '''folder and csv file that tells which worms and which 
     timepoints should be deleted. Structure of the file should 
@@ -32,8 +33,6 @@ class DeleteFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     be quantified. E.g. "*w1*" for all images with w1 in the filename.
 
     '''
-
-
 
     task_namespace = 'ggrosshans'
     resources = {'gpu': 0}
