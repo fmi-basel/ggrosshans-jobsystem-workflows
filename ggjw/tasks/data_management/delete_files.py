@@ -24,19 +24,42 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
             "Images will be deleted from folder {}".format(
                 self.image_folder))
 
-        # get the annotation and the image list
-        CSV_annotation = pd.read_csv(self.csv_document)
-        img_list = glob.glob(self.image_folder + "/"+self.image_file_pattern)
+        # get the image list
+        img_list = glob.glob(os.path.join(
+            self.image_folder, self.image_file_pattern))
 
-        # gets list of images in folder
+        # get annotation file
+        if os.path.exists(self.csv_document):
+            CSV_annotation = pd.read_csv(self.csv_document)
+
+        else:
+            raise FileNotFoundError(
+                'CSV file in path {} is not there'
+                .format(self.csv_document))
+
+        if "Position" not in CSV_annotation:
+            raise FileNotFoundError(
+                'CSV document doesnt contain header Position')
+
+        if "Quality" not in CSV_annotation:
+            raise FileNotFoundError(
+                'CSV document doesnt contain header Quality')
+
+        if "Hatch" not in CSV_annotation:
+            raise FileNotFoundError('CSV document doesnt contain header Hatch')
+        if "Escape" not in CSV_annotation:
+            raise FileNotFoundError(
+                'CSV document doesnt contain header Escape')
+
+        # determine position and frame of each image
         AllData = []
         for image in img_list:
             if self.data_format == 'st':
-                pictureinfo = re.split('_s(\d+)_t(\d+)\..+', image)
+                pictureinfo = re.split('_s(\\d+)_t(\\d+)\\..+', image)
                 s_info = 1
                 t_info = 2
             if self.data_format == 'ts':
-                pictureinfo = re.split('t(\d+)_s(\d+)_', image)
+                pictureinfo = re.split('t(\\d+)_s(\\d+)_', image)
                 s_info = 2
                 t_info = 1
 
@@ -50,7 +73,7 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
         filelist = filelist.merge(
             CSV_annotation, on=['Position'], how='inner')  # merges two datasets
 
-        filelist.to_csv(self.image_folder + "/original_files.csv")
+        filelist.to_csv(os.path.join(self.image_folder, "original_files.csv"))
 
         # reduces the filelist to only the files that need to be deleted
         # selects only worms where quality is 0
@@ -64,13 +87,13 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
         # merges the files to delete
         files_to_delete = pd.concat([files_to_delete1, files_to_delete2])
 
-        files_to_delete.to_csv(self.image_folder+"/deleted_files.csv")
+        files_to_delete.to_csv(os.path.join(
+            self.image_folder, "deleted_files.csv"))
 
         # info's
         self.log_info(
             "{} Nr of images are going to be delted".format(
                 np.size(files_to_delete, 0)))
-        #print("nr of files are going to be deleted = " + str(np.size(files_to_delete,0)))
 
         # delete files in folder
         for i in range(np.size(files_to_delete, 0)):
@@ -82,14 +105,3 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
     def output(self):
         return luigi.LocalTarget(
             os.path.join(self.image_folder, 'deleted_files.csv'))
-
-
-if __name__ == '__main__':
-    luigi.build([
-        DeleteFilesTask(
-            image_folder='/Users/Marit/Documents/Test_folder',  # where the images are
-            csv_document='/Users/Marit/Documents/output/GoodWorms.csv',
-            image_file_pattern='*.stk',  # which channel is the channel for quantification?
-            data_format='st')
-    ],
-        local_scheduler=True)

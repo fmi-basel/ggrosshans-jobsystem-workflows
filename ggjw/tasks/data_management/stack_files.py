@@ -8,7 +8,6 @@ import os
 
 # pip install tifffile
 from tifffile import imwrite
-from skimage import img_as_ubyte
 
 import luigi
 from ggjw.tasks.logging import LGRunnerLoggingMixin, add_progress
@@ -19,11 +18,10 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
     '''should execute stacking the files.'''
 
     # inputs from luigi
-    image_folder = luigi.Parameter()  # where the images are
-    # which channel is the channel for quantification?
+    image_folder = luigi.Parameter()  
     image_file_pattern = luigi.Parameter()
     data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
-    output_folder = luigi.Parameter()  # where the results need to be saved
+    output_folder = luigi.Parameter()  
 
     def run(self):
 
@@ -33,9 +31,11 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
                 a=self.image_file_pattern, b=self.image_folder))
 
         # get imagelist for the folder
-        img_list = glob.glob(self.image_folder+"/"+self.image_file_pattern)
-        if np.size(img_list)==0:
-            raise FileNotFoundError("No input images provided! Check input directory ")
+        img_list = glob.glob(os.path.join(
+            self.image_folder, self.image_file_pattern))
+        if np.size(img_list) == 0:
+            raise FileNotFoundError(
+                "No input images provided! Check input directory ")
 
         # extract position and frame, and saves it in the dataframe filelist
         AllData = []
@@ -83,33 +83,18 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
                 img = io.imread(image_file[0])
                 image_to_save.append(img)
 
-            #add extra dimention for C-channel
+            # add extra dimention for C-channel
 
             image_to_save = np.stack(image_to_save, axis=0)
-            image_to_save=image_to_save[:,:,np.newaxis]
+            image_to_save = image_to_save[:, :, np.newaxis]
+            print(np.shape(image_to_save))
 
             # write to tiff
             os.makedirs(self.output_folder+'/temp', exist_ok=True)
             img_name = self.output_folder+'/temp/s'+str(position)+".tiff"
-            imwrite(img_name, image_to_save,imagej=True)
-
-            # with self.output().open('w') as fout:
-            #     df.to_csv(fout, index=False)
-
+            imwrite(img_name, image_to_save, imagej=True)
 
         self.log_info("stacking files is completed")
 
     def output(self):
         return luigi.LocalTarget(self.output_folder+'/temp')
-
-
-# added to run the code from here
-if __name__ == '__main__':
-    luigi.build([
-        StackFilesTask(
-            image_folder='/Users/Marit/Documents/Test_folder 2',  
-            image_file_pattern='*w1Marit-488-BF-Cam0*.stk',
-            data_format='st',
-            output_folder='/Users/Marit/Documents/output')
-    ],
-        local_scheduler=True)
