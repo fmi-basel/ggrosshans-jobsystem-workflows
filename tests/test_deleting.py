@@ -63,6 +63,13 @@ def test_delete_task(tmpdir, workflow):
     assert os.path.exists(os.path.join(test_dir, "original_files.csv"))
     assert os.path.exists(os.path.join(test_dir, "deleted_files.csv"))
 
+    original_files = pd.read_csv(os.path.join(test_dir, "original_files.csv"))
+    deleted_files = pd.read_csv(os.path.join(test_dir, "deleted_files.csv"))
+
+    remaining_files = pd.concat([original_files, deleted_files]).drop_duplicates(keep=False)
+    for file_path in remaining_files['File']:
+        assert os.path.exists(file_path)
+
     # TEST if gere are _s number of files in the folder
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
     assert np.size(img_list) == n_deleted
