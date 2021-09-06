@@ -34,14 +34,14 @@ def test_delete_task(tmpdir, workflow):
                 test_dir, "w1Marit-488-BF-Cam0_s" + str(s) + "_t" + str(t) + ".stk")
             imwrite(img_name, image_to_save)
 
-    # TEST the the test files are created
+    # TEST if the files are created
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
     print(str(np.size(img_list)))
     print(test_dir)
 
     assert np.size(img_list) == n_original
 
-    # runns the workflow noted in the pytest.mark.parameterize with given input folder
+    # runs the workflow noted in the pytest.mark.parameterize with given input folder
     result = luigi.build([
         workflow(image_folder=test_dir,  # where the images are
                  csv_document=os.path.join(test_dir, "goodworms.csv"),
