@@ -27,7 +27,7 @@ def test_stacking_task(tmpdir, workflow):
     output_folder_test = os.path.join(test_dir, "results")
     os.mkdir(output_folder_test)
 
-    # wcreate images in test_dir
+    # create images in test_dir
     for s in np.linspace(1, int(s), int(s)):
         for t in np.linspace(1, int(t), int(t)):
             image_to_save = np.ones([z, x, y], dtype="uint16")
@@ -36,7 +36,7 @@ def test_stacking_task(tmpdir, workflow):
             imwrite(img_name, image_to_save)
 
     print("images are created")
-    # runns the workflow noted in the pytest.mark.parameterize with given input folder
+    # runs the workflow noted in the pytest.mark.parameterize with given input folder
     result = luigi.build([
         workflow(image_folder=test_dir,
                  image_file_pattern='*w1Marit-488-BF-Cam0*.tiff',
