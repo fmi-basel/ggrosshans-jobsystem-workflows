@@ -33,6 +33,16 @@ def test_delete_task(tmpdir, workflow):
             img_name = os.path.join(
                 test_dir, "w1Marit-488-BF-Cam0_s" + str(s) + "_t" + str(t) + ".stk")
             imwrite(img_name, image_to_save)
+    
+    files_to_be_there=[os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(2) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(3) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(4) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(1) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(2) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(3) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(4) + ".stk"),
+                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(5) + ".stk")]
+     
 
     # TEST if the files are created
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
@@ -69,6 +79,7 @@ def test_delete_task(tmpdir, workflow):
     remaining_files = pd.concat([original_files, deleted_files]).drop_duplicates(keep=False)
     for file_path in remaining_files['File']:
         assert os.path.exists(file_path)
+        assert file_path in files_to_be_there
 
     # TEST if gere are _s number of files in the folder
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
