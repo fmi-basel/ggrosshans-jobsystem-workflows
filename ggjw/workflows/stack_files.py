@@ -7,8 +7,8 @@ from ggjw.tasks.data_management.stack_files import StackFilesTask
 
 
 class StackFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
-    '''executes the worm quantification workflow on a given set of images
-    and their corresponding segmentations.
+    '''executes the stack files workflow that stacks the images of a 
+    certain channel in z and t.
 
     '''
     image_folder = luigi.Parameter()
@@ -37,7 +37,7 @@ class StackFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     resources = {'gpu': 0}
 
     def requires(self):
-        '''launch the actual quantification task.
+        '''launch the actual stacking task.
         '''
         yield StackFilesTask(
 
