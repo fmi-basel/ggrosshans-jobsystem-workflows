@@ -28,8 +28,8 @@ def test_stacking_task(tmpdir, workflow):
     os.mkdir(output_folder_test)
 
     # create images in test_dir
-    for s in np.linspace(1, int(s), int(s)):
-        for t in np.linspace(1, int(t), int(t)):
+    for s in range(1, s + 1):
+        for t in range(1, t + 1):
             image_to_save = np.ones([z, x, y], dtype="uint16")
             img_name = os.path.join(
                 test_dir, "w1Marit-488-BF-Cam0_s"+str(int(s))+"_t"+str(int(t))+".tiff")
@@ -64,4 +64,5 @@ def test_stacking_task(tmpdir, workflow):
     # TEST if the images that are in there, has size TZCXY
     for image in img_list:
         img = io.imread(image)
-        assert np.shape(img) == (int(t), z, x, y)
+        # Saving imagej compatible drops singleton channel dimension. Hence we don't check for it.
+        assert np.shape(img) == (t, z, x, y)
