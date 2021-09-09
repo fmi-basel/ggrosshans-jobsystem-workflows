@@ -16,33 +16,7 @@ from ggjw.workflows.delete_files import DeleteFilesWorkflow
     'workflow', [DeleteFilesTask, DeleteFilesWorkflow])  # workflows you want to test
 def test_delete_task(tmpdir, workflow):
 
-    # create testdata
-    test_dir = tmpdir
-
-    csv = {'Position': [1, 2, 3], 'Quality': [1, 0, 1],
-           "Hatch": [2, 2, 0], "Escape": [4, 2, 6]}
-    csv = pd.DataFrame(csv)
-    csv.to_csv(os.path.join(test_dir, "goodworms.csv"))
-
-    # create images
-    n_original = 15
-    n_deleted = 8
-    for s in [1, 2, 3]:
-        for t in [1, 2, 3, 4, 5]:
-            image_to_save = np.ones([5, 20, 20])
-            img_name = os.path.join(
-                test_dir, "w1Marit-488-BF-Cam0_s" + str(s) + "_t" + str(t) + ".stk")
-            imwrite(img_name, image_to_save)
-    
-    files_to_be_there=[os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(2) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(3) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(4) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(1) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(2) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(3) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(4) + ".stk"),
-                       os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(5) + ".stk")]
-     
+    files_to_be_there, n_deleted, n_original, test_dir = create_test_data(tmpdir)
 
     # TEST if the files are created
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
@@ -84,3 +58,32 @@ def test_delete_task(tmpdir, workflow):
     # TEST if gere are _s number of files in the folder
     img_list = glob.glob(os.path.join(test_dir, "*.stk"))
     assert np.size(img_list) == n_deleted
+
+
+def create_test_data(tmpdir):
+    """
+    Create test data.
+    """
+    test_dir = tmpdir
+    csv = {'Position': [1, 2, 3], 'Quality': [1, 0, 1],
+           "Hatch": [2, 2, 0], "Escape": [4, 2, 6]}
+    csv = pd.DataFrame(csv)
+    csv.to_csv(os.path.join(test_dir, "goodworms.csv"))
+    # create images
+    n_original = 15
+    n_deleted = 8
+    for s in [1, 2, 3]:
+        for t in [1, 2, 3, 4, 5]:
+            image_to_save = np.ones([5, 20, 20])
+            img_name = os.path.join(
+                test_dir, "w1Marit-488-BF-Cam0_s" + str(s) + "_t" + str(t) + ".stk")
+            imwrite(img_name, image_to_save)
+    files_to_be_there = [os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(2) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(3) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(1) + "_t" + str(4) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(1) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(2) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(3) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(4) + ".stk"),
+                         os.path.join(test_dir, "w1Marit-488-BF-Cam0_s" + str(3) + "_t" + str(5) + ".stk")]
+    return files_to_be_there, n_deleted, n_original, test_dir
