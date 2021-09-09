@@ -15,7 +15,6 @@ from ggjw.workflows.delete_files import DeleteFilesWorkflow
 @pytest.mark.parametrize(
     'workflow', [DeleteFilesTask, DeleteFilesWorkflow])  # workflows you want to test
 def test_delete_task(tmpdir, workflow):
-
     files_to_be_there, n_deleted, n_original, test_dir = create_test_data(tmpdir)
 
     # TEST if the files are created

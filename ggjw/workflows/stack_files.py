@@ -22,8 +22,8 @@ class StackFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
 
     '''
 
-    {"default": "st","choises":["st","ts"]}
-    data_format = luigi.ChoiceParameter(choices=["st","ts"],default="st")
+    {"default": "st", "choises": ["st", "ts"]}
+    data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
     '''order of time and position in files: 's_t_' or 't_s_'.
 
     '''

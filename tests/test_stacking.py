@@ -13,7 +13,6 @@ from tifffile import imwrite
 @pytest.mark.parametrize(
     'workflow', [StackFilesTask, StackFilesWorkflow])  # workflows you want to test
 def test_stacking_task(tmpdir, workflow):
-
     # Test data for workflow
     s = 3
     t = 5
@@ -32,7 +31,7 @@ def test_stacking_task(tmpdir, workflow):
         for t in range(1, t + 1):
             image_to_save = np.ones([z, x, y], dtype="uint16")
             img_name = os.path.join(
-                test_dir, "w1Marit-488-BF-Cam0_s"+str(int(s))+"_t"+str(int(t))+".tiff")
+                test_dir, "w1Marit-488-BF-Cam0_s" + str(int(s)) + "_t" + str(int(t)) + ".tiff")
             imwrite(img_name, image_to_save)
 
     print("images are created")
