@@ -23,5 +23,6 @@ setup(
         'numpy',
         'tqdm',
         'faim-luigi>=0.1.1',
-        'dl-utils'
+        'dl-utils',
+        'tifffile'
     ])
