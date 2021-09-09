@@ -1,46 +1,47 @@
-'''Provides quantification workflows for image-based assay.
-
-'''
 import luigi
 from ggjw.workflows.base import JobSystemWorkflow
 from ggjw.tasks.data_management.delete_files import DeleteFilesTask
 
 
 class DeleteFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
-    '''executes the delete files workflow that delete the files based on
-    a given "goodworms.csv" csv files that indicates when the worm hatch 
-    and excape.
-
-    '''
+    """
+    Executes the delete files workflow that deletes the images of worms which
+    have not hatched or have escaped. The deletion is based on a provided
+    'goodworms.csv' files, which indicates for each worm when it hatches and
+    when it escapes.
+    """
     image_folder = luigi.Parameter()
-    '''folder containing the images to be processed.
+    """
+    Folder containing the images to be processed.
+    """
 
-    '''
     {"default": "st", "choises": ["st", "ts"]}
     data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
-    '''order of time and position in files: 's_t_' or 't_s_'.
-
-    '''
+    """
+    Visiview automatically writes the data out with 's_' (referring to the stage position)
+    and 't_' (referring to the time point) in the file-name. However, sometimes the order of 's_'
+    and 't_' is inverted. Here we provide information on this order.
+    """
 
     csv_document = luigi.Parameter()
-    '''folder and csv file that tells which worms and which 
+    """
+    Folder and csv file that tells which worms and which 
     timepoints should be deleted. Structure of the file should 
     have headings: "Position", "Quality", "Hatch", "Escape"
+    """
 
-    '''
-
-    image_file_pattern = luigi.Parameter()
-    '''fname pattern matching images of the channel that should
-    be quantified. E.g. "*w1*" for all images with w1 in the filename.
-
-    '''
+    image_file_pattern = luigi.Parameter(default="*.tif")
+    """
+    File name pattern of the files to be considered for deletion.
+    """
 
     task_namespace = 'ggrosshans'
     resources = {'gpu': 0}
 
     def requires(self):
-        '''launch the actual deleting file task.
-        '''
+        """
+        Launch the actual deleting file task.
+        """
         yield DeleteFilesTask(
             image_folder=self.image_folder,
             data_format=self.data_format,

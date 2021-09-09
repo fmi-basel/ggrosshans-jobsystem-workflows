@@ -5,8 +5,8 @@ from ggjw.tasks.data_management.stack_files import StackFilesTask
 
 class StackFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     """
-    Executes the stack files workflow that stacks the images of a
-    certain channel in z and t.
+    A task that stacks 3D (X, Y, Z) visiview images from multiple timepoints
+    and stage positions into a 5D imagej tif (T, Z, C, X, Y).
     """
 
     image_folder = luigi.Parameter()

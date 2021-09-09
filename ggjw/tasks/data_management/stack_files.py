@@ -16,7 +16,8 @@ from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
 
 class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
     """
-    Should execute stacking the files.
+    A task that stacks 3D (X, Y, Z) visiview images from multiple timepoints
+    and stage positions into a 5D imagej tif (T, Z, C, X, Y).
     """
 
     # inputs from luigi
