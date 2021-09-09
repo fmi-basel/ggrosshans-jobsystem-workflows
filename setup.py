@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 contrib = [
-    'Markus Rempfler',
+    'Markus Rempfler', 'Marit van der Does', 'Jan Egliner', 'Tim-Oliver Buchholz'
 ]
 
 # setup.
