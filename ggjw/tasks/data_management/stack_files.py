@@ -1,4 +1,3 @@
-# testp
 from os.path import join
 
 import pandas as pd
@@ -8,7 +7,6 @@ import re
 from skimage import io
 import os
 
-# pip install tifffile
 from tifffile import imwrite
 
 import luigi
@@ -17,13 +15,15 @@ from ggjw.tasks.lgrunner.stop import StoppableTaskMixin
 
 
 class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
-    '''should execute stacking the files.'''
+    """
+    Should execute stacking the files.
+    """
 
     # inputs from luigi
-    image_folder = luigi.Parameter()  
+    image_folder = luigi.Parameter()
     image_file_pattern = luigi.Parameter()
     data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
-    output_folder = luigi.Parameter()  
+    output_folder = luigi.Parameter()
 
     def run(self):
 
@@ -70,8 +70,7 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
             self.log_info("running image position {a} from total of {b} positions".format(
                 a=str(position), b=len(Unique_positions)))
 
-            add_progress(self, position / len(Unique_positions)*100)
-            #print("pos "+ str(position))
+            add_progress(self, position / len(Unique_positions) * 100)
 
             # make a list which images to stack
             images_to_stack = ordered_filelist[position]
@@ -81,19 +80,17 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
 
             # loops over the images in position
             for image_file in images_to_stack:
-                # print(image_file)
                 img = io.imread(image_file[0])
                 image_to_save.append(img)
 
             # add extra dimention for C-channel
-
             image_to_save = np.stack(image_to_save, axis=0)
             image_to_save = image_to_save[:, :, np.newaxis]
             print(np.shape(image_to_save))
 
             # write to tiff
             os.makedirs(join(self.output_folder, "temp"), exist_ok=True)
-            img_name = join(self.output_folder, "temp", "s"+str(position)+".tiff")
+            img_name = join(self.output_folder, "temp", "s" + str(position) + ".tiff")
             imwrite(img_name, image_to_save, imagej=True)
 
         self.log_info("stacking files is completed")
