@@ -7,7 +7,7 @@ contrib = [
 # setup.
 setup(
     name='ggjw',
-    version='0.5.0',
+    version='0.5.1',
     description='grosshans-jobsystem-workflows',
     author=', '.join(contrib),
     packages=find_packages(exclude=[
