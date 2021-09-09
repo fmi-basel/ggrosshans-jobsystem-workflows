@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 
 contrib = [
-    'Markus Rempfler',
+    'Markus Rempfler', 'Marit van der Does', 'Jan Egliner', 'Tim-Oliver Buchholz'
 ]
 
 # setup.
 setup(
     name='ggjw',
-    version='0.5.0',
+    version='0.5.1',
     description='grosshans-jobsystem-workflows',
     author=', '.join(contrib),
     packages=find_packages(exclude=[
@@ -23,5 +23,6 @@ setup(
         'numpy',
         'tqdm',
         'faim-luigi>=0.1.1',
-        'dl-utils'
+        'dl-utils',
+        'tifffile'
     ])
