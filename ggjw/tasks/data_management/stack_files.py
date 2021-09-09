@@ -1,4 +1,6 @@
 # testp
+from os.path import join
+
 import pandas as pd
 import numpy as np
 import glob
@@ -90,11 +92,11 @@ class StackFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
             print(np.shape(image_to_save))
 
             # write to tiff
-            os.makedirs(self.output_folder+'/temp', exist_ok=True)
-            img_name = self.output_folder+'/temp/s'+str(position)+".tiff"
+            os.makedirs(join(self.output_folder, "temp"), exist_ok=True)
+            img_name = join(self.output_folder, "temp", "s"+str(position)+".tiff")
             imwrite(img_name, image_to_save, imagej=True)
 
         self.log_info("stacking files is completed")
 
     def output(self):
-        return luigi.LocalTarget(self.output_folder+'/temp')
+        return luigi.LocalTarget(join(self.output_folder, "temp"))
