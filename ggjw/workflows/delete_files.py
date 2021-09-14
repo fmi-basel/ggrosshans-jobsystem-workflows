@@ -15,7 +15,7 @@ class DeleteFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     Folder containing the images to be processed.
     """
 
-    {"default": "st", "choises": ["st", "ts"]}
+    {"default": "st", "choices": ["st", "ts"]}
     data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
     """
     Visiview automatically writes the data out with 's_' (referring to the stage position)

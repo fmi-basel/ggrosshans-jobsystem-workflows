@@ -20,7 +20,7 @@ class StackFilesWorkflow(luigi.WrapperTask, JobSystemWorkflow):
     be quantified. E.g. "*w1*" for all images with w1 in the filename.
     """
 
-    {"default": "st", "choises": ["st", "ts"]}
+    {"default": "st", "choices": ["st", "ts"]}
     data_format = luigi.ChoiceParameter(choices=["st", "ts"], default="st")
     """
     Visiview automatically writes the data out with 's_' (referring to the stage position)
