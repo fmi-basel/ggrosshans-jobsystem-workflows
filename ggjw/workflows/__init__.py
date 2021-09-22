@@ -3,4 +3,6 @@ from .worm_segm_annotation import PrepareManuallySelectedImagesForAnnotationWork
 from .worm_segm_annotation import PrepareRandomlySelectedImagesForAnnotationWorkflow
 from .worm_quantification import WormQuantificationWorkflow
 from .image_compression import StkToTifImageCompressionWorkflow
+from .delete_files import DeleteFilesWorkflow
+from .stack_files import StackFilesWorkflow
 
