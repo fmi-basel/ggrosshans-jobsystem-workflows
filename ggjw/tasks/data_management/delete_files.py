@@ -51,14 +51,14 @@ class DeleteFilesTask(luigi.Task, LGRunnerLoggingMixin, StoppableTaskMixin):
 
         # info's
         self.log_info(
-            "{} Nr of images are going to be delted".format(
+            "{} files are going to be deleted".format(
                 np.size(files_to_delete, 0)))
 
         # delete files in folder
         for i in range(np.size(files_to_delete, 0)):
             os.remove(files_to_delete["File"].iloc[i])
 
-        self.log_info("Files are deleted")
+        self.log_info("File deletion complete.")
 
     def validate(self, CSV_annotation):
         """
